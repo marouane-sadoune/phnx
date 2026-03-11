@@ -10,6 +10,7 @@ const Index = () => {
       <main className="pt-16">
         <HeroSection />
         <ProductGrid />
+        <Footer />
       </main>
     </div>
   );
