@@ -8,7 +8,7 @@ export const ProductGrid = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchProducts(20)
+    fetchProducts(4)
       .then(setProducts)
       .catch(console.error)
       .finally(() => setLoading(false));
