@@ -8,6 +8,7 @@ import { useCartSync } from "@/hooks/useCartSync";
 import Index from "./pages/Index.tsx";
 import ProductDetail from "./pages/ProductDetail.tsx";
 import Auth from "./pages/Auth.tsx";
+import Collections from "./pages/Collections.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
