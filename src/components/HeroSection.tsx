@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";
 
 export const HeroSection = () => {
@@ -23,13 +24,13 @@ export const HeroSection = () => {
           <p className="text-lg md:text-xl text-secondary-foreground mt-4 mb-8 font-light opacity-0 animate-fade-up-delay drop-shadow-md">
             Streetwear meets modern minimalism.
           </p>
-          <a
-            href="#products"
+          <Link
+            to="/collections"
             className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-10 py-4 rounded-full font-bold uppercase tracking-widest text-sm hover:bg-foreground hover:text-background transition-all duration-400 shadow-lg opacity-0 animate-fade-up-delay-2"
           >
             Shop Collection
             <ArrowRight className="h-4 w-4" />
-          </a>
+          </Link>
         </div>
       </div>
 
