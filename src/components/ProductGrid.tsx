@@ -16,7 +16,7 @@ export const ProductGrid = () => {
 
   return (
     <section id="products" className="w-full px-6 md:px-10 py-16">
-      <h2 className="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide text-foreground mb-10">
+      <h2 className="font-display text-3xl md:text-4xl font-bold uppercase tracking-wide text-center mb-10">
         Our Collection
       </h2>
 

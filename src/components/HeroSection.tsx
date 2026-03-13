@@ -37,10 +37,10 @@ export const HeroSection = () => {
       <div className="absolute bottom-0 left-0 right-0 bg-black/50 backdrop-blur-sm py-3 overflow-hidden">
         <div className="flex animate-marquee whitespace-nowrap">
           <span className="text-xs tracking-[0.3em] uppercase text-muted-foreground mx-8">
-            PHENIX — 2024 COLLECTION | ELEVATE YOUR STYLE — PHENIX — 2024 COLLECTION | ELEVATE YOUR STYLE — PHENIX — 2024 COLLECTION | ELEVATE YOUR STYLE —
+            PHENIX — 2026 COLLECTION | ELEVATE YOUR STYLE — PHENIX — 2024 COLLECTION | ELEVATE YOUR STYLE — PHENIX — 2026 COLLECTION | ELEVATE YOUR STYLE —
           </span>
           <span className="text-xs tracking-[0.3em] uppercase text-muted-foreground mx-8">
-            PHENIX — 2024 COLLECTION | ELEVATE YOUR STYLE — PHENIX — 2024 COLLECTION | ELEVATE YOUR STYLE — PHENIX — 2024 COLLECTION | ELEVATE YOUR STYLE —
+            PHENIX — 2026 COLLECTION | ELEVATE YOUR STYLE — PHENIX — 2024 COLLECTION | ELEVATE YOUR STYLE — PHENIX — 2026 COLLECTION | ELEVATE YOUR STYLE —
           </span>
         </div>
       </div>
