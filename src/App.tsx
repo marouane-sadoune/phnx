@@ -28,6 +28,7 @@ const App = () => (
           <CartSyncWrapper>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/collections" element={<Collections />} />
               <Route path="/product/:handle" element={<ProductDetail />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="*" element={<NotFound />} />
