@@ -1,4 +1,4 @@
-import { Search, User, LogOut } from "lucide-react";
+import { Search, User, LogOut, UserCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { CartDrawer } from "./CartDrawer";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,13 +34,17 @@ export const Navbar = () => {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-2 text-primary hover:text-primary/80 transition-colors">
-                  <User className="h-5 w-5" />
+                <button className="flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-opacity">
+                  {(user.user_metadata?.display_name?.[0] ?? user.email?.[0] ?? "?").toUpperCase()}
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-card border-border">
-                <DropdownMenuItem className="text-muted-foreground text-xs cursor-default">
+              <DropdownMenuContent align="end" className="bg-card border-border w-48">
+                <DropdownMenuItem className="text-muted-foreground text-xs cursor-default truncate">
                   {user.email}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/profile")} className="text-foreground cursor-pointer">
+                  <UserCircle2 className="h-4 w-4 mr-2" />
+                  My Profile
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSignOut} className="text-foreground cursor-pointer">
                   <LogOut className="h-4 w-4 mr-2" />
