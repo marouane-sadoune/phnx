@@ -211,35 +211,53 @@ const ProductDetail = () => {
               {product.title}
             </h1>
 
-            <div className="flex items-end gap-4 mt-4">
-              <p className="text-2xl font-bold">
+            {/* Star Rating Mock */}
+            <div className="flex items-center gap-2 mt-3 mb-1">
+              <div className="flex text-yellow-400 text-lg leading-none">
+                <span>★</span><span>★</span><span>★</span><span>★</span><span className="text-muted-foreground/30">★</span>
+              </div>
+              <span className="text-sm font-medium text-muted-foreground mt-0.5">4.0/5</span>
+            </div>
+
+            <div className="flex items-end gap-3 mt-4">
+              <p className="text-3xl font-bold">
                 {selectedVariant?.price.currencyCode} {parseFloat(selectedVariant?.price.amount || "0").toFixed(2)}
               </p>
               {selectedVariant?.compareAtPrice && (
-                <p className="text-lg text-muted-foreground line-through decoration-muted-foreground/50 mb-0.5">
-                  {selectedVariant.compareAtPrice.currencyCode} {parseFloat(selectedVariant.compareAtPrice.amount).toFixed(2)}
-                </p>
+                <>
+                  <p className="text-xl text-muted-foreground line-through decoration-muted-foreground/50 mb-0.5">
+                    {selectedVariant.compareAtPrice.currencyCode} {parseFloat(selectedVariant.compareAtPrice.amount).toFixed(2)}
+                  </p>
+                  <span className="mb-1.5 bg-red-100 text-red-600 text-xs font-bold px-2 py-0.5 rounded-md">
+                    -{Math.round((1 - parseFloat(selectedVariant?.price.amount || "0") / parseFloat(selectedVariant.compareAtPrice.amount)) * 100)}%
+                  </span>
+                </>
               )}
             </div>
 
-            <p className={`text-sm font-semibold mt-3 ${selectedVariant?.availableForSale ? "text-green-600" : "text-red-500"}`}>
-              {selectedVariant?.availableForSale ? "✓ In Stock and ready to ship" : "⨯ Temporarily out of stock"}
-            </p>
+            {product.description && (
+              <p className="text-muted-foreground leading-relaxed text-sm mt-6">
+                {product.description}
+              </p>
+            )}
 
-            <div className="border-b border-border w-full my-6" />
+            <div className="border-b border-border w-full my-8" />
 
             {/* Options Selector */}
-            {product.options?.map((option: any) => {
+            {product.options?.map((option: any, index: number) => {
               const optName = option.name.toLowerCase();
               const isColor = optName === "color" || optName === "couleur";
+              const isSize = optName === "size" || optName === "taille";
+              const displayText = option.name.toLowerCase() === "denominations" ? "Filters" : option.name;
+              const prefix = isColor ? "Select" : isSize ? "Choose" : "Select";
 
               return (
-                <div key={option.name} className="mb-6">
+                <div key={option.name} className={`mb-6 pb-6 ${index !== product.options.length - 1 ? 'border-b border-border' : ''}`}>
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-bold uppercase tracking-widest text-foreground">
-                      {option.name.toLowerCase() === "denominations" ? "Filters" : option.name}
+                    <span className="text-sm font-medium text-foreground">
+                      {prefix} {displayText}
                     </span>
-                    {selectedVariant && (
+                    {selectedVariant && !isColor && !isSize && (
                       <span className="text-sm text-muted-foreground">
                         {selectedVariant.selectedOptions.find((o: any) => o.name === option.name)?.value}
                       </span>
@@ -309,10 +327,10 @@ const ProductDetail = () => {
                 onClick={handleAddToCart}
                 disabled={isCartLoading || !selectedVariant?.availableForSale}
                 className={`
-                  w-full h-14 rounded-2xl text-base font-bold uppercase tracking-wider transition-all duration-300
+                  w-full h-14 rounded-full text-base font-bold transition-all duration-300
                   ${!selectedVariant?.availableForSale
                     ? "bg-secondary text-muted-foreground cursor-not-allowed"
-                    : "bg-foreground text-background hover:bg-foreground/90 hover:scale-[1.01] shadow-xl hover:shadow-primary/20"
+                    : "bg-[#222222] text-white hover:bg-black hover:scale-[1.01] shadow-lg"
                   }
                 `}
               >
@@ -328,18 +346,7 @@ const ProductDetail = () => {
 
             {/* Accordions */}
             <div className="mt-10">
-              <Accordion type="single" collapsible defaultValue="description" className="w-full space-y-2">
-
-                {product.description && (
-                  <AccordionItem value="description" className="bg-secondary/40 rounded-xl px-4 border-none data-[state=open]:bg-secondary/60">
-                    <AccordionTrigger className="text-sm font-bold uppercase tracking-widest py-5 hover:no-underline">
-                      Description
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed text-sm pb-5">
-                      {product.description}
-                    </AccordionContent>
-                  </AccordionItem>
-                )}
+              <Accordion type="single" collapsible className="w-full space-y-2">
 
                 <AccordionItem value="shipping" className="bg-secondary/40 rounded-xl px-4 border-none data-[state=open]:bg-secondary/60">
                   <AccordionTrigger className="text-sm font-bold uppercase tracking-widest py-5 hover:no-underline flex items-center gap-2">
