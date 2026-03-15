@@ -4,6 +4,7 @@ import { CartDrawer } from "./CartDrawer";
 import { useAuth } from "@/contexts/AuthContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import logoImg from "@/assets/logowhite.png";
 
 export const Navbar = () => {
   const navigate = useNavigate();
@@ -16,8 +17,9 @@ export const Navbar = () => {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-      <div className="flex items-center justify-between px-6 md:px-10 h-16">
-        <a href="/" className="font-display text-2xl font-bold tracking-wider text-foreground">
+      <div className="flex items-center justify-between px-6 md:px-36 h-16">
+        <a href="/" className="flex items-center gap-3 font-display text-2xl md:text-3xl font-bold tracking-wider text-foreground hover:opacity-90 transition-opacity">
+          <img src={logoImg} alt="PHENIX logo" className="h-8 md:h-10 w-auto object-contain shrink-0" />
           PHENIX
         </a>
 
