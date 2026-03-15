@@ -36,6 +36,7 @@ const ProductDetail = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const [isZooming, setIsZooming] = useState(false);
+  const [quantity, setQuantity] = useState(1);
   const [otherProducts, setOtherProducts] = useState<any[]>([]);
 
   const addItem = useCartStore(state => state.addItem);
@@ -43,6 +44,8 @@ const ProductDetail = () => {
   const { addProduct } = useRecentlyViewed();
 
   const imgRef = useRef<HTMLDivElement>(null);
+  const addToCartRef = useRef<HTMLDivElement>(null);
+  const [showSticky, setShowSticky] = useState(false);
 
   useEffect(() => {
     if (!handle) return;
@@ -71,6 +74,18 @@ const ProductDetail = () => {
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handle]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (addToCartRef.current) {
+        const rect = addToCartRef.current.getBoundingClientRect();
+        // Show sticky bar when the original Add To Cart button scrolls out of view (above the viewport)
+        setShowSticky(rect.bottom < 0);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   if (loading) {
     return (
@@ -108,7 +123,7 @@ const ProductDetail = () => {
       variantId: selectedVariant.id,
       variantTitle: selectedVariant.title,
       price: selectedVariant.price,
-      quantity: 1,
+      quantity: quantity,
       selectedOptions: selectedVariant.selectedOptions || [],
     });
     toast.success("Added to cart", { position: "top-center" });
@@ -322,7 +337,7 @@ const ProductDetail = () => {
             })}
 
             {/* Add to Cart Area */}
-            <div className="mt-6">
+            <div className="mt-6" ref={addToCartRef}>
               <Button
                 onClick={handleAddToCart}
                 disabled={isCartLoading || !selectedVariant?.availableForSale}
@@ -407,6 +422,89 @@ const ProductDetail = () => {
       )}
 
       <Footer />
+
+      {/* Sticky Add to Cart */}
+      <div className={`bls__sticky-addcart fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border py-4 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] ${showSticky ? 'sticky-addcart-show' : ''}`}>
+        <div className="max-w-[1400px] mx-auto px-6 md:px-10 flex flex-col md:flex-row items-center justify-between gap-4">
+          
+          {/* Left Side: Product Info */}
+          <div className="flex items-center gap-4 w-full md:w-auto overflow-hidden">
+            <img src={images[selectedImage]?.node.url} alt="" className="w-12 h-16 object-cover rounded-md bg-secondary shrink-0 hidden md:block" />
+            <div className="min-w-0 flex flex-col justify-center">
+              <p className="font-bold text-sm truncate">{product.title}</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <p className="text-sm font-bold text-[#e53e3e]">
+                  {selectedVariant?.price.currencyCode} {parseFloat(selectedVariant?.price.amount || "0").toFixed(2)}
+                </p>
+                {selectedVariant?.compareAtPrice && (
+                  <span className="text-xs text-muted-foreground line-through decoration-muted-foreground/50">
+                    {selectedVariant.compareAtPrice.currencyCode} {parseFloat(selectedVariant.compareAtPrice.amount).toFixed(2)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side: Actions */}
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full md:w-auto shrink-0 justify-end">
+            
+            {/* Variant Selector */}
+            <div className="relative w-full sm:w-auto sm:min-w-[240px]">
+              <select
+                value={selectedVariantIndex}
+                onChange={(e) => setSelectedVariantIndex(Number(e.target.value))}
+                className="w-full appearance-none bg-background border border-border/80 rounded-full h-12 px-6 text-sm font-medium focus:outline-none focus:border-primary pr-10 hover:border-border transition-colors cursor-pointer"
+              >
+                {variants.map((v: any, idx: number) => {
+                  const optionsStr = v.node.selectedOptions
+                     .filter((o: any) => o.name.toLowerCase() !== "denominations")
+                     .map((o: any) => o.value)
+                     .join(' / ');
+                  const title = optionsStr || v.node.title || "Default Title";
+                  const price = `${v.node.price.currencyCode === 'USD' ? '$' : ''}${parseFloat(v.node.price.amount).toFixed(2)}`;
+                  return (
+                    <option key={v.node.id} value={idx}>
+                      {title} - {price}
+                    </option>
+                  );
+                })}
+              </select>
+              <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
+            </div>
+
+            {/* Quantity Selector */}
+            <div className="flex items-center border border-border/80 rounded-full h-12 bg-secondary/20 shrink-0 w-full sm:w-auto sm:min-w-[120px]">
+              <button 
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                className="flex-1 h-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <svg width="12" height="2" viewBox="0 0 12 2" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+              <span className="w-10 text-center text-sm font-medium text-primary">
+                {quantity}
+              </span>
+              <button 
+                onClick={() => setQuantity(quantity + 1)}
+                className="flex-1 h-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 1V11M1 6H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+            </div>
+
+            {/* Add to Cart Button */}
+            <Button
+                onClick={handleAddToCart}
+                disabled={isCartLoading || !selectedVariant?.availableForSale}
+                className={`w-full sm:w-auto sm:min-w-[200px] h-12 rounded-full text-sm font-bold tracking-widest uppercase transition-all duration-300 ${!selectedVariant?.availableForSale ? "bg-secondary text-muted-foreground cursor-not-allowed" : "bg-[#111111] text-white hover:bg-black hover:scale-[1.02] shadow-md"}`}
+            >
+                {isCartLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : !selectedVariant?.availableForSale ? "Sold Out" : "Add to Cart"}
+            </Button>
+
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

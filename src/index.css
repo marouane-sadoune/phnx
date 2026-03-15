@@ -83,3 +83,30 @@
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
+
+/* Sticky Add To Cart Styles */
+.bls__sticky-addcart {
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease-in-out;
+  -webkit-transition: all 0.3s ease-in-out;
+  -webkit-transform: translate3d(0, 100%, 0);
+  transform: translate3d(0, 100%, 0);
+}
+
+.bls__sticky-addcart.sticky-addcart-show {
+  opacity: 1;
+  visibility: visible;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+}
+
+.product-form__submit.btn-loading>span:not(.loader-icon) {
+  opacity: 0;
+}
+
+@media (max-width: 767px) {
+  .bls__sticky-addcart {
+    --input-height: 40px;
+  }
+}
