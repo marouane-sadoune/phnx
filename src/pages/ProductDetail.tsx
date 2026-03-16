@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/accordion";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, ShoppingCart, ChevronRight, Truck, ShieldCheck, Droplets, Plus, Minus, Ruler } from "lucide-react";
+import * as pixel from "@/lib/pixel";
 
 /* ─── Color Map (Matches Collections page) ────────────── */
 const COLOUR_MAP: Record<string, string> = {
@@ -61,7 +62,18 @@ const ProductDetail = () => {
         setProduct(p);
         setSelectedImage(0);
         setSelectedVariantIndex(0);
-        if (p) addProduct({ node: p });
+        if (p) {
+          addProduct({ node: p });
+          // Track ViewContent
+          pixel.event('ViewContent', {
+            content_name: p.title,
+            content_category: p.productType,
+            content_ids: [p.id],
+            content_type: 'product',
+            value: parseFloat(p.priceRange.minVariantPrice.amount),
+            currency: p.priceRange.minVariantPrice.currencyCode
+          });
+        }
 
         // Pick 4 random products for the "Other Products" section
         const others = allProducts
@@ -127,6 +139,15 @@ const ProductDetail = () => {
       quantity: quantity,
       selectedOptions: selectedVariant.selectedOptions || [],
     });
+    // Track AddToCart
+    pixel.event('AddToCart', {
+      content_name: product.title,
+      content_ids: [selectedVariant.id],
+      content_type: 'product',
+      value: parseFloat(selectedVariant.price.amount),
+      currency: selectedVariant.price.currencyCode
+    });
+
     toast.success("Added to cart", { position: "top-center" });
   };
 

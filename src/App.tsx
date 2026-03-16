@@ -12,12 +12,29 @@ import Auth from "./pages/Auth.tsx";
 import Collections from "./pages/Collections.tsx";
 import Profile from "./pages/Profile.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import * as pixel from "@/lib/pixel";
 
 const queryClient = new QueryClient();
 
 const CartSyncWrapper = ({ children }: { children: React.ReactNode }) => {
   useCartSync();
   return <>{children}</>;
+};
+
+const PixelTracker = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    pixel.initPixel();
+  }, []);
+
+  useEffect(() => {
+    pixel.pageview();
+  }, [location]);
+
+  return null;
 };
 
 const App = () => (
@@ -29,6 +46,7 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <CartSyncWrapper>
+              <PixelTracker />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/collections" element={<Collections />} />

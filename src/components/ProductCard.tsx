@@ -3,6 +3,7 @@ import { ShoppingCart, Loader2 } from "lucide-react";
 import type { ShopifyProduct } from "@/lib/shopify";
 import { useCartStore } from "@/stores/cartStore";
 import { toast } from "sonner";
+import * as pixel from "@/lib/pixel";
 
 interface ProductCardProps {
   product: ShopifyProduct;
@@ -31,6 +32,16 @@ export const ProductCard = ({ product }: ProductCardProps) => {
       quantity: 1,
       selectedOptions: variant.selectedOptions || [],
     });
+
+    // Track AddToCart
+    pixel.event('AddToCart', {
+      content_name: node.title,
+      content_ids: [variant.id],
+      content_type: 'product',
+      value: parseFloat(variant.price.amount),
+      currency: variant.price.currencyCode
+    });
+
     toast.success("Added to cart!", { position: "top-center" });
   };
 

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ShoppingCart, Minus, Plus, Trash2, ExternalLink, Loader2 } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
+import * as pixel from "@/lib/pixel";
 
 export const CartDrawer = () => {
   const { 
@@ -25,6 +26,15 @@ export const CartDrawer = () => {
   const handleCheckout = () => {
     const checkoutUrl = getCheckoutUrl();
     if (checkoutUrl) {
+      // Track InitiateCheckout
+      pixel.event('InitiateCheckout', {
+        num_items: totalItems,
+        value: totalPrice,
+        currency: items[0]?.price.currencyCode || 'USD',
+        content_ids: items.map(i => i.variantId),
+        content_type: 'product'
+      });
+      
       window.open(checkoutUrl, '_blank');
       setDrawerOpen(false);
     }
