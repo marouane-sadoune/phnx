@@ -11,6 +11,7 @@ import ProductDetail from "./pages/ProductDetail.tsx";
 import Auth from "./pages/Auth.tsx";
 import Collections from "./pages/Collections.tsx";
 import Profile from "./pages/Profile.tsx";
+import Checkout from "./pages/Checkout.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -50,9 +51,10 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/collections" element={<Collections />} />
-                <Route path="/product/:handle" element={<ProductDetail />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/product/:handle" element={<ProductDetail />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </CartSyncWrapper>
