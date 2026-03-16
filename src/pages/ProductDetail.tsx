@@ -14,7 +14,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, ShoppingCart, ChevronRight, Truck, ShieldCheck, Droplets } from "lucide-react";
+import { ArrowLeft, Loader2, ShoppingCart, ChevronRight, Truck, ShieldCheck, Droplets, Plus, Minus, Ruler } from "lucide-react";
 
 /* ─── Color Map (Matches Collections page) ────────────── */
 const COLOUR_MAP: Record<string, string> = {
@@ -123,6 +123,7 @@ const ProductDetail = () => {
       variantId: selectedVariant.id,
       variantTitle: selectedVariant.title,
       price: selectedVariant.price,
+      compareAtPrice: selectedVariant.compareAtPrice || null,
       quantity: quantity,
       selectedOptions: selectedVariant.selectedOptions || [],
     });
@@ -263,23 +264,36 @@ const ProductDetail = () => {
               const optName = option.name.toLowerCase();
               const isColor = optName === "color" || optName === "couleur";
               const isSize = optName === "size" || optName === "taille";
-              const displayText = option.name.toLowerCase() === "denominations" ? "Filters" : option.name;
+              
+              // Skip "Default Title" internal Shopify variant
+              if (optName === "title" && option.values.length === 1 && option.values[0].toLowerCase() === "default title") {
+                return null;
+              }
+
+              const displayText = option.name;
               const prefix = isColor ? "Select" : isSize ? "Choose" : "Select";
 
               return (
-                <div key={option.name} className={`mb-6 pb-6 ${index !== product.options.length - 1 ? 'border-b border-border' : ''}`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-medium text-foreground">
-                      {prefix} {displayText}
-                    </span>
-                    {selectedVariant && !isColor && !isSize && (
-                      <span className="text-sm text-muted-foreground">
-                        {selectedVariant.selectedOptions.find((o: any) => o.name === option.name)?.value}
+                <div key={option.name} className="mb-8 last:mb-0">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                       <span className="text-xs font-bold uppercase tracking-[0.15em] text-foreground/80">
+                        {displayText}
                       </span>
+                      {selectedVariant && (
+                        <span className="text-[10px] bg-secondary px-2 py-0.5 rounded font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                          {selectedVariant.selectedOptions.find((o: any) => o.name === option.name)?.value}
+                        </span>
+                      )}
+                    </div>
+                    {isSize && (
+                      <button className="text-[10px] font-bold uppercase tracking-widest text-[#BF953F] hover:underline flex items-center gap-1.5 transition-all">
+                        <Ruler className="h-3 w-3" /> Size Guide
+                      </button>
                     )}
                   </div>
 
-                  <div className="flex flex-wrap gap-2.5">
+                  <div className="flex flex-wrap gap-3">
                     {option.values.map((value: string) => {
                       const variantIndex = variants.findIndex(
                         (v: any) => v.node.selectedOptions.some((o: any) => o.name === option.name && o.value === value)
@@ -298,16 +312,21 @@ const ProductDetail = () => {
                             onClick={() => variantIndex >= 0 && setSelectedVariantIndex(variantIndex)}
                             title={value}
                             className={`
-                              relative h-10 w-10 rounded-full transition-all duration-200
-                              ${isSelected ? "ring-2 ring-primary ring-offset-2 scale-110" : "hover:scale-105"}
-                              ${!isAvailable && !isSelected ? "opacity-40" : ""}
-                              ${bg === "#ffffff" ? "border border-border" : ""}
+                              relative h-11 w-11 rounded-full transition-all duration-300
+                              ${isSelected ? "ring-2 ring-[#BF953F] ring-offset-2 scale-110 shadow-lg" : "hover:scale-105 opacity-70 hover:opacity-100"}
+                              ${!isAvailable && !isSelected ? "opacity-30 grayscale" : ""}
+                              ${bg.toLowerCase() === "#ffffff" || value.toLowerCase() === "white" ? "border border-border" : ""}
                             `}
                             style={isGrad ? { backgroundImage: bg } : { backgroundColor: bg }}
                           >
+                            {isSelected && (
+                              <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-[#BF953F] rounded-full flex items-center justify-center border-2 border-background">
+                                <div className="h-1.5 w-1.5 bg-black rounded-full" />
+                              </div>
+                            )}
                             {!isAvailable && (
-                              <div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
-                                <div className="w-full h-px bg-red-500 rotate-45 transform origin-center border-y border-background" />
+                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div className="w-full h-px bg-red-500/60 rotate-45" />
                               </div>
                             )}
                           </button>
@@ -319,12 +338,12 @@ const ProductDetail = () => {
                           key={value}
                           onClick={() => variantIndex >= 0 && setSelectedVariantIndex(variantIndex)}
                           className={`
-                            min-w-[3rem] px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 border-2
+                            min-w-[3.5rem] px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all duration-300 border-2
                             ${isSelected
-                              ? "border-primary bg-primary text-primary-foreground shadow-md"
-                              : "border-border text-foreground hover:border-primary/50 bg-background"
+                              ? "bg-foreground text-background border-foreground shadow-md"
+                              : "border-border text-muted-foreground hover:border-[#BF953F]/40 hover:text-foreground bg-secondary/20"
                             }
-                            ${!isAvailable && !isSelected ? "opacity-30 line-through bg-secondary text-muted-foreground border-transparent" : ""}
+                            ${!isAvailable && !isSelected ? "opacity-30 line-through bg-secondary/50 border-transparent cursor-not-allowed" : ""}
                           `}
                         >
                           {value}
@@ -336,8 +355,33 @@ const ProductDetail = () => {
               );
             })}
 
+            <div className="border-b border-border w-full my-8" />
+
+            {/* Quantity Selector */}
+            <div className="mb-8">
+              <span className="text-xs font-bold uppercase tracking-[0.15em] text-foreground/80 mb-4 block">Quantity</span>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center bg-secondary/50 border border-border rounded-xl px-2 h-12 w-fit">
+                  <button 
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <span className="w-10 text-center font-bold text-sm">{quantity}</span>
+                  <button 
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+                <span className="text-[10px] text-muted-foreground font-medium italic">Only a few left in stock</span>
+              </div>
+            </div>
+
             {/* Add to Cart Area */}
-            <div className="mt-6" ref={addToCartRef}>
+            <div className="mt-2" ref={addToCartRef}>
               <Button
                 onClick={handleAddToCart}
                 disabled={isCartLoading || !selectedVariant?.availableForSale}
@@ -345,7 +389,7 @@ const ProductDetail = () => {
                   w-full h-14 rounded-full text-base font-bold transition-all duration-300
                   ${!selectedVariant?.availableForSale
                     ? "bg-secondary text-muted-foreground cursor-not-allowed"
-                    : "bg-[#222222] text-white hover:bg-black hover:scale-[1.01] shadow-lg"
+                    : "bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black hover:scale-[1.01] shadow-lg hover:shadow-[0_0_20px_rgba(191,149,63,0.4)] transition-all duration-300"
                   }
                 `}
               >
@@ -433,7 +477,7 @@ const ProductDetail = () => {
             <div className="min-w-0 flex flex-col justify-center">
               <p className="font-bold text-sm truncate">{product.title}</p>
               <div className="flex items-center gap-2 mt-0.5">
-                <p className="text-sm font-bold text-[#e53e3e]">
+                <p className="text-sm font-bold text-[#BF953F]">
                   {selectedVariant?.price.currencyCode} {parseFloat(selectedVariant?.price.amount || "0").toFixed(2)}
                 </p>
                 {selectedVariant?.compareAtPrice && (
@@ -460,7 +504,7 @@ const ProductDetail = () => {
                      .filter((o: any) => o.name.toLowerCase() !== "denominations")
                      .map((o: any) => o.value)
                      .join(' / ');
-                  const title = optionsStr || v.node.title || "Default Title";
+                  const title = optionsStr && optionsStr !== "Default Title" ? optionsStr : "Select Option";
                   const price = `${v.node.price.currencyCode === 'USD' ? '$' : ''}${parseFloat(v.node.price.amount).toFixed(2)}`;
                   return (
                     <option key={v.node.id} value={idx}>
@@ -482,7 +526,7 @@ const ProductDetail = () => {
               >
                 <svg width="12" height="2" viewBox="0 0 12 2" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
-              <span className="w-10 text-center text-sm font-medium text-primary">
+              <span className="w-10 text-center text-sm font-medium text-[#BF953F]">
                 {quantity}
               </span>
               <button 
@@ -497,7 +541,7 @@ const ProductDetail = () => {
             <Button
                 onClick={handleAddToCart}
                 disabled={isCartLoading || !selectedVariant?.availableForSale}
-                className={`w-full sm:w-auto sm:min-w-[200px] h-12 rounded-full text-sm font-bold tracking-widest uppercase transition-all duration-300 ${!selectedVariant?.availableForSale ? "bg-secondary text-muted-foreground cursor-not-allowed" : "bg-[#111111] text-white hover:bg-black hover:scale-[1.02] shadow-md"}`}
+                className={`w-full sm:w-auto sm:min-w-[200px] h-12 rounded-full text-sm font-bold tracking-widest uppercase transition-all duration-300 ${!selectedVariant?.availableForSale ? "bg-secondary text-muted-foreground cursor-not-allowed" : "bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black hover:scale-[1.02] shadow-md hover:shadow-[0_0_15px_rgba(191,149,63,0.3)]"}`}
             >
                 {isCartLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : !selectedVariant?.availableForSale ? "Sold Out" : "Add to Cart"}
             </Button>

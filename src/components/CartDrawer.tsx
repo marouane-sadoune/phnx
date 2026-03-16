@@ -6,28 +6,37 @@ import { ShoppingCart, Minus, Plus, Trash2, ExternalLink, Loader2 } from "lucide
 import { useCartStore } from "@/stores/cartStore";
 
 export const CartDrawer = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const { items, isLoading, isSyncing, updateQuantity, removeItem, getCheckoutUrl, syncCart } = useCartStore();
+  const { 
+    items, 
+    isLoading, 
+    isSyncing, 
+    updateQuantity, 
+    removeItem, 
+    getCheckoutUrl, 
+    syncCart,
+    isDrawerOpen,
+    setDrawerOpen
+  } = useCartStore();
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce((sum, item) => sum + (parseFloat(item.price.amount) * item.quantity), 0);
 
-  useEffect(() => { if (isOpen) syncCart(); }, [isOpen, syncCart]);
+  useEffect(() => { if (isDrawerOpen) syncCart(); }, [isDrawerOpen, syncCart]);
 
   const handleCheckout = () => {
     const checkoutUrl = getCheckoutUrl();
     if (checkoutUrl) {
       window.open(checkoutUrl, '_blank');
-      setIsOpen(false);
+      setDrawerOpen(false);
     }
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+    <Sheet open={isDrawerOpen} onOpenChange={setDrawerOpen}>
       <SheetTrigger asChild>
         <button className="relative p-2 text-muted-foreground hover:text-foreground transition-colors">
           <ShoppingCart className="h-5 w-5" />
           {totalItems > 0 && (
-            <Badge className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px] bg-primary text-primary-foreground">
+            <Badge className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px] bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black font-bold border-none">
               {totalItems}
             </Badge>
           )}
@@ -62,7 +71,14 @@ export const CartDrawer = () => {
                       <div className="flex-1 min-w-0">
                         <h4 className="font-display font-medium text-foreground truncate text-sm">{item.product.node.title}</h4>
                         <p className="text-xs text-muted-foreground">{item.selectedOptions.map(o => o.value).join(' • ')}</p>
-                        <p className="font-semibold text-primary text-sm">{item.price.currencyCode} {parseFloat(item.price.amount).toFixed(2)}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-primary text-sm">{item.price.currencyCode} {parseFloat(item.price.amount).toFixed(2)}</p>
+                          {item.compareAtPrice && parseFloat(item.compareAtPrice.amount) > parseFloat(item.price.amount) && (
+                            <span className="text-xs text-muted-foreground line-through decoration-muted-foreground/50">
+                              {item.compareAtPrice.currencyCode} {parseFloat(item.compareAtPrice.amount).toFixed(2)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="flex flex-col items-end gap-2 flex-shrink-0">
                         <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" onClick={() => removeItem(item.variantId)}>
@@ -87,7 +103,7 @@ export const CartDrawer = () => {
                   <span className="text-lg font-display font-semibold text-foreground">Total</span>
                   <span className="text-xl font-bold text-primary">{items[0]?.price.currencyCode || '$'} {totalPrice.toFixed(2)}</span>
                 </div>
-                <Button onClick={handleCheckout} className="w-full bg-primary text-primary-foreground hover:bg-primary/90" size="lg" disabled={items.length === 0 || isLoading || isSyncing}>
+                <Button onClick={handleCheckout} className="w-full bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black hover:scale-[1.02] hover:shadow-[0_0_15px_rgba(191,149,63,0.4)] transition-all duration-300 font-bold" size="lg" disabled={items.length === 0 || isLoading || isSyncing}>
                   {isLoading || isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <><ExternalLink className="w-4 h-4 mr-2" />Checkout</>}
                 </Button>
               </div>

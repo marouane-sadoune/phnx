@@ -63,7 +63,7 @@ export const FeaturedDrop = () => {
                             )}
                             <div className="absolute top-6 left-6 flex flex-col gap-2">
                                 <span className="bg-background/90 backdrop-blur-md text-foreground px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-sm flex items-center gap-1.5 border border-border">
-                                    <Zap className="h-3 w-3 text-red-500 fill-red-500" /> Exclusive
+                                    <Zap className="h-3 w-3 text-red-600 fill-red-600" /> Exclusive
                                 </span>
                             </div>
                         </div>
@@ -89,7 +89,7 @@ export const FeaturedDrop = () => {
                             <Button
                                 disabled={loading}
                                 onClick={() => navigate(product ? `/product/${product.handle}` : `/product/${FEATURED_HANDLE}`)}
-                                className="w-full sm:w-auto h-14 px-8 rounded-full text-base font-bold transition-all duration-300 bg-foreground text-background hover:bg-foreground/90 hover:scale-105 shadow-xl group"
+                                className="w-full sm:w-auto h-14 px-8 rounded-full text-base font-bold transition-all duration-300 bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black hover:scale-105 hover:shadow-[0_0_20px_rgba(191,149,63,0.5)] shadow-xl group"
                             >
                                 Shop
                                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -104,7 +104,7 @@ export const FeaturedDrop = () => {
                                 <div className="w-10 h-10 rounded-full border-2 border-background bg-secondary flex items-center justify-center text-xs font-bold">SL</div>
                             </div>
                             <p className="text-sm font-medium text-muted-foreground">
-                                <span className="text-foreground font-bold">Over 500+</span> already claimed
+                                <span className="text-foreground font-bold">Over 200+</span> already claimed
                             </p>
                         </div>
                     </div>

@@ -27,6 +27,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
       variantId: variant.id,
       variantTitle: variant.title,
       price: variant.price,
+      compareAtPrice: variant.compareAtPrice || null,
       quantity: 1,
       selectedOptions: variant.selectedOptions || [],
     });
@@ -71,8 +72,15 @@ export const ProductCard = ({ product }: ProductCardProps) => {
 
         {/* Out of stock badge */}
         {!inStock && (
-          <span className="absolute top-2 left-2 bg-background/80 backdrop-blur-sm text-foreground text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-md">
+          <span className="absolute top-2 left-2 bg-background/80 backdrop-blur-sm text-foreground text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-md z-10">
             Out of stock
+          </span>
+        )}
+
+        {/* Sale badge */}
+        {variant?.compareAtPrice && parseFloat(variant.compareAtPrice.amount) > parseFloat(price.amount) && (
+          <span className="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md shadow-sm z-10">
+            -{Math.round((1 - parseFloat(price.amount) / parseFloat(variant.compareAtPrice.amount)) * 100)}%
           </span>
         )}
 
@@ -109,9 +117,16 @@ export const ProductCard = ({ product }: ProductCardProps) => {
       <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-foreground truncate">
         {node.title}
       </h3>
-      <p className="text-primary font-semibold mt-0.5 text-sm">
-        {price.currencyCode} {parseFloat(price.amount).toFixed(2)}
-      </p>
+      <div className="flex items-center gap-2 mt-0.5">
+        <p className="text-secondary-foreground font-bold text-sm">
+          {price.currencyCode} {parseFloat(price.amount).toFixed(2)}
+        </p>
+        {variant?.compareAtPrice && parseFloat(variant.compareAtPrice.amount) > parseFloat(price.amount) && (
+          <span className="text-xs text-muted-foreground line-through decoration-muted-foreground/50">
+            {variant.compareAtPrice.currencyCode} {parseFloat(variant.compareAtPrice.amount).toFixed(2)}
+          </span>
+        )}
+      </div>
     </div>
   );
 };

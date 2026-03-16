@@ -1,14 +1,24 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { fetchProducts, type ShopifyProduct } from "@/lib/shopify";
 import { ProductCard } from "@/components/ProductCard";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import {
   SlidersHorizontal, Minus, ChevronDown, Loader2,
-  LayoutGrid, List, X,
+  LayoutGrid, List, X, Search, Check, RotateCcw,
+  Tag, Truck, ShieldCheck, Droplets
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
@@ -17,8 +27,6 @@ import {
 type SortOption = "default" | "newest" | "price-asc" | "price-desc" | "name-asc" | "name-desc";
 type ViewMode = "grid" | "list";
 
-const CATEGORIES = ["All Products", "T-shirts", "Outerwear", "Accessories"];
-const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 const PAGE_SIZE = 12;
 
 const COLOUR_MAP: Record<string, string> = {
@@ -58,33 +66,22 @@ function SkeletonCard({ list = false }: { list?: boolean }) {
   );
 }
 
-/* ─── FilterSection ─────────────────────────────────────────── */
-function FilterSection({ title, children }: { title: string; children: React.ReactNode }) {
-  const [open, setOpen] = useState(true);
-  return (
-    <div className="border-b border-border py-5">
-      <button onClick={() => setOpen(!open)} className="flex w-full items-center justify-between mb-4 group">
-        <span className="text-xs font-bold uppercase tracking-widest text-foreground">{title}</span>
-        {open
-          ? <Minus className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
-          : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />}
-      </button>
-      {open && <div>{children}</div>}
-    </div>
-  );
-}
+
 
 /* ─── List-view product row ─────────────────────────────────── */
 function ProductRow({ product }: { product: ShopifyProduct }) {
   const { node } = product;
   const image = node.images.edges[0]?.node;
   const price = node.priceRange.minVariantPrice;
+  const variant = node.variants.edges[0]?.node;
+  const isOnSale = variant?.compareAtPrice && parseFloat(variant.compareAtPrice.amount) > parseFloat(price.amount);
+
   return (
     <a
       href={`/product/${node.handle}`}
       className="flex gap-5 border-b border-border pb-6 group hover:bg-secondary/30 transition-colors rounded-lg px-2 -mx-2"
     >
-      <div className="w-28 h-28 md:w-36 md:h-36 rounded-xl bg-secondary overflow-hidden shrink-0">
+      <div className="w-28 h-28 md:w-36 md:h-36 rounded-xl bg-secondary overflow-hidden shrink-0 relative">
         {image ? (
           <img
             src={image.url}
@@ -95,14 +92,26 @@ function ProductRow({ product }: { product: ShopifyProduct }) {
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No image</div>
         )}
+        {isOnSale && (
+          <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md shadow-sm">
+            -{Math.round((1 - parseFloat(price.amount) / parseFloat(variant.compareAtPrice.amount)) * 100)}%
+          </div>
+        )}
       </div>
       <div className="flex flex-col justify-center gap-1.5 flex-1 min-w-0">
         <h3 className="font-display text-sm md:text-base font-semibold uppercase tracking-wide truncate">
           {node.title}
         </h3>
-        <p className="text-primary font-semibold text-sm">
-          {price.currencyCode} {parseFloat(price.amount).toFixed(2)}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-secondary-foreground font-bold text-sm">
+            {price.currencyCode} {parseFloat(price.amount).toFixed(2)}
+          </p>
+          {isOnSale && (
+            <span className="text-xs text-muted-foreground line-through decoration-muted-foreground/50">
+              {variant.compareAtPrice.currencyCode} {parseFloat(variant.compareAtPrice.amount).toFixed(2)}
+            </span>
+          )}
+        </div>
         {node.description && (
           <p className="text-xs text-muted-foreground line-clamp-2 hidden sm:block">{node.description}</p>
         )}
@@ -116,145 +125,251 @@ function ProductRow({ product }: { product: ShopifyProduct }) {
 
 /* ─── Sidebar panel (shared between desktop & sheet) ────────── */
 function FilterPanel({
-  categories, selectedCategory, onSelectCategory,
+  searchQuery, onSearchChange,
+  availableTypes, selectedTypes, onToggleType,
+  availableVendors, selectedVendors, onToggleVendor,
   availabilityFilter, onAvailabilityChange, stockCounts,
   priceRange, onPriceRange, maxPrice,
-  availableSizes, selectedSizes, onToggleSize,
-  availableColors, selectedColors, onToggleColor,
+  onSaleOnly, onToggleSale,
+  dynamicOptions, selectedOptions, onToggleOption,
   hasActiveFilters, onClear,
 }: {
-  categories: string[];
-  selectedCategory: string;
-  onSelectCategory: (c: string) => void;
+  searchQuery: string;
+  onSearchChange: (v: string) => void;
+  availableTypes: string[];
+  selectedTypes: Set<string>;
+  onToggleType: (t: string) => void;
+  availableVendors: string[];
+  selectedVendors: Set<string>;
+  onToggleVendor: (v: string) => void;
   availabilityFilter: { inStock: boolean; outOfStock: boolean };
   onAvailabilityChange: (k: "inStock" | "outOfStock", v: boolean) => void;
   stockCounts: { inStock: number; outOfStock: number };
   priceRange: [number, number];
   onPriceRange: (v: [number, number]) => void;
   maxPrice: number;
-  availableSizes: string[];
-  selectedSizes: Set<string>;
-  onToggleSize: (s: string) => void;
-  availableColors: string[];
-  selectedColors: Set<string>;
-  onToggleColor: (c: string) => void;
+  onSaleOnly: boolean;
+  onToggleSale: (v: boolean) => void;
+  dynamicOptions: Array<{ name: string; values: string[] }>;
+  selectedOptions: Map<string, Set<string>>;
+  onToggleOption: (name: string, value: string) => void;
   hasActiveFilters: boolean;
   onClear: () => void;
 }) {
   return (
     <div className="flex flex-col h-full">
-      <div className="px-5 flex-1 overflow-y-auto">
-        {/* CATEGORY */}
-        <FilterSection title="Category">
-          <ul className="space-y-2">
-            {categories.map((cat) => (
-              <li key={cat}>
-                <button
-                  onClick={() => onSelectCategory(cat)}
-                  className={`text-sm transition-colors ${selectedCategory === cat
-                      ? "font-semibold text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                    }`}
-                >
-                  {cat}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </FilterSection>
-
-        {/* AVAILABILITY */}
-        <FilterSection title="Availability">
-          <ul className="space-y-2.5">
-            {[
-              { id: "av-in", key: "inStock" as const, label: `In stock (${stockCounts.inStock})` },
-              { id: "av-out", key: "outOfStock" as const, label: `Out of stock (${stockCounts.outOfStock})` },
-            ].map(({ id, key, label }) => (
-              <li key={id} className="flex items-center gap-2.5">
-                <input
-                  id={id} type="checkbox"
-                  checked={availabilityFilter[key]}
-                  onChange={(e) => onAvailabilityChange(key, e.target.checked)}
-                  className="h-3.5 w-3.5 rounded border-border accent-primary cursor-pointer"
-                />
-                <label htmlFor={id} className="text-sm cursor-pointer select-none text-muted-foreground">{label}</label>
-              </li>
-            ))}
-          </ul>
-        </FilterSection>
-
-        {/* PRICE */}
-        <FilterSection title="Price">
-          <Slider
-            value={priceRange}
-            onValueChange={(v) => onPriceRange(v as [number, number])}
-            min={0} max={maxPrice} step={1} className="mb-3"
-          />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>${priceRange[0]}</span>
-            <span>${priceRange[1]}</span>
+      <div className="px-5 flex-1 overflow-y-auto pb-8">
+        {/* SIDEBAR SEARCH */}
+        <div className="pt-5 pb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search items..."
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="pl-9 bg-secondary/50 border-border rounded-xl h-11"
+            />
           </div>
-        </FilterSection>
+        </div>
 
-        {/* SIZE */}
-        {(availableSizes.length > 0 ? availableSizes : SIZES).length > 0 && (
-          <FilterSection title="Size">
-            <div className="flex flex-wrap gap-2">
-              {(availableSizes.length > 0 ? availableSizes : SIZES).map((s) => (
-                <button
-                  key={s} onClick={() => onToggleSize(s)}
-                  className={`
-                    min-w-[2.5rem] px-3 py-1.5 rounded-md border text-sm font-medium transition-all duration-150
-                    ${selectedSizes.has(s)
-                      ? "bg-foreground text-background border-foreground"
-                      : "bg-background text-foreground border-border hover:border-foreground"}
-                  `}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </FilterSection>
-        )}
+        <Accordion type="multiple" defaultValue={["categories", "availability", "price", "sale"]} className="w-full">
+          
+          {/* PRODUCT TYPE */}
+          {availableTypes.length > 0 && (
+            <AccordionItem value="categories" className="border-border">
+              <AccordionTrigger className="text-xs font-bold uppercase tracking-widest hover:no-underline py-4">
+                Product Type
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-2 mt-1">
+                  {availableTypes.map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => onToggleType(type)}
+                      className={`flex items-center gap-2 text-sm w-full text-left transition-colors ${
+                        selectedTypes.has(type) ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
+                        selectedTypes.has(type) ? "bg-primary border-primary" : "border-border"
+                      }`}>
+                        {selectedTypes.has(type) && <Check className="h-3 w-3 text-primary-foreground" />}
+                      </div>
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )}
 
-        {/* COLORS */}
-        {availableColors.length > 0 && (
-          <FilterSection title="Colors">
-            <div className="flex flex-wrap gap-2.5">
-              {availableColors.map((color) => {
-                const bg = COLOUR_MAP[color] ?? color;
-                const isGrad = bg.startsWith("conic");
-                const selected = selectedColors.has(color);
-                return (
-                  <button
-                    key={color} onClick={() => onToggleColor(color)} title={color}
-                    className={`
-                      h-8 w-8 rounded-full transition-all duration-150
-                      ${selected ? "ring-2 ring-offset-2 ring-foreground scale-110" : "hover:scale-110"}
-                      ${color === "white" || color === "cream" || color === "beige" ? "border border-border" : ""}
-                    `}
-                    style={isGrad ? { backgroundImage: bg } : { backgroundColor: bg }}
+          {/* VENDORS / BRANDS */}
+          {availableVendors.length > 0 && (
+            <AccordionItem value="vendors" className="border-border">
+              <AccordionTrigger className="text-xs font-bold uppercase tracking-widest hover:no-underline py-4">
+                Brand
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-2 mt-1">
+                  {availableVendors.map((vendor) => (
+                    <button
+                      key={vendor}
+                      onClick={() => onToggleVendor(vendor)}
+                      className={`flex items-center gap-2 text-sm w-full text-left transition-colors ${
+                        selectedVendors.has(vendor) ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
+                        selectedVendors.has(vendor) ? "bg-primary border-primary" : "border-border"
+                      }`}>
+                        {selectedVendors.has(vendor) && <Check className="h-3 w-3 text-primary-foreground" />}
+                      </div>
+                      {vendor}
+                    </button>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )}
+
+          {/* AVAILABILITY */}
+          <AccordionItem value="availability" className="border-border">
+            <AccordionTrigger className="text-xs font-bold uppercase tracking-widest hover:no-underline py-4">
+              Availability
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-3 mt-1">
+                {[
+                  { id: "av-in", key: "inStock" as const, label: `In stock`, count: stockCounts.inStock },
+                  { id: "av-out", key: "outOfStock" as const, label: `Out of stock`, count: stockCounts.outOfStock },
+                ].map(({ id, key, label, count }) => (
+                  <div key={id} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <Checkbox 
+                        id={id} 
+                        checked={availabilityFilter[key]} 
+                        onCheckedChange={(v) => onAvailabilityChange(key, !!v)}
+                      />
+                      <label htmlFor={id} className="text-sm cursor-pointer select-none text-muted-foreground">{label}</label>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground/60 font-mono tracking-tighter transition-all duration-300">({count})</span>
+                  </div>
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* OFFERS / SALE */}
+          <AccordionItem value="sale" className="border-border">
+            <AccordionTrigger className="text-xs font-bold uppercase tracking-widest hover:no-underline py-4">
+              Special Offers
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="flex items-center justify-between mt-1">
+                <div className="flex items-center gap-2.5">
+                  <Checkbox 
+                    id="on-sale" 
+                    checked={onSaleOnly} 
+                    onCheckedChange={(v) => onToggleSale(!!v)}
                   />
-                );
-              })}
-            </div>
-          </FilterSection>
-        )}
+                  <label htmlFor="on-sale" className="text-sm cursor-pointer select-none text-muted-foreground">On Sale</label>
+                </div>
+                <Tag className="h-3.5 w-3.5 text-[#BF953F]" />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* PRICE */}
+          <AccordionItem value="price" className="border-border">
+            <AccordionTrigger className="text-xs font-bold uppercase tracking-widest hover:no-underline py-4">
+              Price Range
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="pt-2 pb-1">
+                <Slider
+                  value={priceRange}
+                  onValueChange={(v) => onPriceRange(v as [number, number])}
+                  min={0} max={maxPrice} step={1} className="mb-4"
+                />
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <div className="flex-1 bg-secondary border border-border rounded-lg p-2 text-center text-xs">
+                    <span className="text-muted-foreground mr-1">Min:</span> ${priceRange[0]}
+                  </div>
+                  <Minus className="h-3 w-3 text-muted-foreground" />
+                  <div className="flex-1 bg-secondary border border-border rounded-lg p-2 text-center text-xs">
+                    <span className="text-muted-foreground mr-1">Max:</span> ${priceRange[1]}
+                  </div>
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* DYNAMIC OPTIONS (Size, Color, etc.) */}
+          {dynamicOptions.map((opt) => (
+            <AccordionItem key={opt.name} value={`opt-${opt.name}`} className="border-border">
+              <AccordionTrigger className="text-xs font-bold uppercase tracking-widest hover:no-underline py-4">
+                {opt.name}
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {opt.values.map((val) => {
+                    const isColor = opt.name.toLowerCase() === "color" || opt.name.toLowerCase() === "couleur";
+                    const isSelected = selectedOptions.get(opt.name)?.has(val);
+                    
+                    if (isColor) {
+                      const bg = COLOUR_MAP[val.toLowerCase()] ?? val.toLowerCase();
+                      const isGrad = bg.startsWith("conic") || bg.startsWith("linear");
+                      return (
+                        <button
+                          key={val}
+                          onClick={() => onToggleOption(opt.name, val)}
+                          title={val}
+                          className={`
+                            h-8 w-8 rounded-full transition-all duration-200 shadow-sm
+                            ${isSelected ? "ring-2 ring-offset-2 ring-[#BF953F] scale-110" : "hover:scale-110"}
+                            ${val.toLowerCase() === "white" ? "border border-border" : ""}
+                          `}
+                          style={isGrad ? { backgroundImage: bg } : { backgroundColor: bg }}
+                        />
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={val}
+                        onClick={() => onToggleOption(opt.name, val)}
+                        className={`
+                          min-w-[2.5rem] px-3 py-2 rounded-lg border text-xs font-semibold transition-all duration-200
+                          ${isSelected
+                            ? "bg-[#BF953F] text-black border-transparent shadow-md"
+                            : "bg-secondary/50 text-foreground border-border hover:border-[#BF953F]/50"}
+                        `}
+                      >
+                        {val}
+                      </button>
+                    );
+                  })}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+
+        </Accordion>
       </div>
 
       {/* Reset */}
-      <div className="px-5 pb-5 pt-4 shrink-0">
-        <button
-          onClick={onClear} disabled={!hasActiveFilters}
-          className={`
-            w-full py-3 rounded-xl text-sm font-semibold underline underline-offset-2 transition-all duration-200
-            ${hasActiveFilters
-              ? "bg-foreground text-background hover:opacity-90"
-              : "bg-secondary text-muted-foreground cursor-default"}
-          `}
+      <div className="px-5 pb-5 pt-4 shrink-0 bg-background/80 backdrop-blur-sm border-t border-border">
+        <Button
+          onClick={onClear} 
+          disabled={!hasActiveFilters}
+          variant={hasActiveFilters ? "default" : "secondary"}
+          className={`w-full py-6 rounded-xl text-sm font-bold tracking-widest uppercase transition-all duration-300 ${
+            hasActiveFilters ? "bg-foreground text-background" : ""
+          }`}
         >
-          Reset Filters
-        </button>
+          <RotateCcw className={`h-4 w-4 mr-2 ${hasActiveFilters ? "animate-spin-once" : ""}`} />
+          Clear All
+        </Button>
       </div>
     </div>
   );
@@ -266,13 +381,18 @@ const Collections = () => {
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<SortOption>("default");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
-  const [selectedSizes, setSelectedSizes] = useState<Set<string>>(new Set());
-  const [selectedColors, setSelectedColors] = useState<Set<string>>(new Set());
-  const [selectedCategory, setSelectedCategory] = useState("All Products");
+  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
+  const [selectedVendors, setSelectedVendors] = useState<Set<string>>(new Set());
+  const [selectedOptions, setSelectedOptions] = useState<Map<string, Set<string>>>(new Map());
   const [availabilityFilter, setAvailabilityFilter] = useState({ inStock: false, outOfStock: false });
+  const [onSaleOnly, setOnSaleOnly] = useState(false);
+  const [internalSearch, setInternalSearch] = useState("");
+  
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loadingMore, setLoadingMore] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchQuery = searchParams.get("q") || "";
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -288,26 +408,35 @@ const Collections = () => {
     if (products.length > 0) setPriceRange([0, maxPrice]);
   }, [maxPrice, products.length]);
 
-  const availableSizes = useMemo(() => {
-    const found = new Set<string>();
-    products.forEach((p) =>
-      p.node.options.forEach((opt) => {
-        if (opt.name.toLowerCase() === "size" || opt.name.toLowerCase() === "taille")
-          opt.values.forEach((v) => found.add(v.toUpperCase()));
-      })
-    );
-    return SIZES.filter((s) => found.has(s));
+  // Dynamically extract Brands
+  const availableVendors = useMemo(() => {
+    const v = new Set<string>();
+    products.forEach(p => p.node.vendor && v.add(p.node.vendor));
+    return Array.from(v).sort();
   }, [products]);
 
-  const availableColors = useMemo(() => {
-    const found = new Set<string>();
-    products.forEach((p) =>
-      p.node.options.forEach((opt) => {
-        if (opt.name.toLowerCase() === "color" || opt.name.toLowerCase() === "couleur")
-          opt.values.forEach((v) => found.add(v.toLowerCase()));
-      })
-    );
-    return Array.from(found);
+  // Dynamically extract Product Types
+  const availableTypes = useMemo(() => {
+    const t = new Set<string>();
+    products.forEach(p => p.node.productType && t.add(p.node.productType));
+    return Array.from(t).sort();
+  }, [products]);
+
+  // Dynamically extract Options (ignoring "Title")
+  const dynamicOptions = useMemo(() => {
+    const optsMap = new Map<string, Set<string>>();
+    products.forEach(p => {
+      p.node.options.forEach(opt => {
+        if (opt.name.toLowerCase() === "title") return;
+        if (!optsMap.has(opt.name)) optsMap.set(opt.name, new Set());
+        opt.values.forEach(val => {
+           if (val.toLowerCase() !== "default title") optsMap.get(opt.name)?.add(val);
+        });
+      });
+    });
+    return Array.from(optsMap.entries())
+      .map(([name, values]) => ({ name, values: Array.from(values).sort() }))
+      .filter(o => o.values.length > 0);
   }, [products]);
 
   const stockCounts = useMemo(() => {
@@ -316,33 +445,82 @@ const Collections = () => {
     return { inStock, outOfStock };
   }, [products]);
 
+  const toggleOption = (name: string, value: string) => {
+    setSelectedOptions((prev) => {
+      const next = new Map(prev);
+      const values = new Set(next.get(name) || []);
+      values.has(value) ? values.delete(value) : values.add(value);
+      if (values.size === 0) next.delete(name);
+      else next.set(name, values);
+      return next;
+    });
+  };
+
+  const toggleType = (t: string) =>
+    setSelectedTypes(prev => { const n = new Set(prev); n.has(t) ? n.delete(t) : n.add(t); return n; });
+
+  const toggleVendor = (v: string) =>
+    setSelectedVendors(prev => { const n = new Set(prev); n.has(v) ? n.delete(v) : n.add(v); return n; });
+
   /* Active filter chips data */
   const activeChips = useMemo(() => {
     const chips: { label: string; onRemove: () => void }[] = [];
     if (sortBy !== "default")
       chips.push({ label: `Sort: ${SORT_LABELS[sortBy]}`, onRemove: () => setSortBy("default") });
-    if (selectedCategory !== "All Products")
-      chips.push({ label: selectedCategory, onRemove: () => setSelectedCategory("All Products") });
+    
+    selectedTypes.forEach(t => chips.push({ label: `Type: ${t}`, onRemove: () => toggleType(t) }));
+    selectedVendors.forEach(v => chips.push({ label: `Brand: ${v}`, onRemove: () => toggleVendor(v) }));
+    
     if (availabilityFilter.inStock)
       chips.push({ label: "In stock", onRemove: () => setAvailabilityFilter((p) => ({ ...p, inStock: false })) });
     if (availabilityFilter.outOfStock)
       chips.push({ label: "Out of stock", onRemove: () => setAvailabilityFilter((p) => ({ ...p, outOfStock: false })) });
+    
+    if (onSaleOnly)
+      chips.push({ label: "On Sale", onRemove: () => setOnSaleOnly(false) });
+
     if (priceRange[0] > 0 || priceRange[1] < maxPrice)
       chips.push({ label: `$${priceRange[0]} – $${priceRange[1]}`, onRemove: () => setPriceRange([0, maxPrice]) });
-    selectedSizes.forEach((s) =>
-      chips.push({ label: `Size: ${s}`, onRemove: () => toggleSize(s) })
-    );
-    selectedColors.forEach((c) =>
-      chips.push({ label: `Color: ${c}`, onRemove: () => toggleColor(c) })
-    );
+    
+    selectedOptions.forEach((vals, name) => {
+      vals.forEach(v => chips.push({ label: `${name}: ${v}`, onRemove: () => toggleOption(name, v) }));
+    });
+
+    if (searchQuery || internalSearch) {
+      const q = searchQuery || internalSearch;
+      chips.push({ label: `Search: "${q}"`, onRemove: () => {
+        setInternalSearch("");
+        if (searchQuery) {
+          const newParams = new URLSearchParams(searchParams);
+          newParams.delete("q");
+          setSearchParams(newParams);
+        }
+      }});
+    }
     return chips;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortBy, selectedCategory, availabilityFilter, priceRange, maxPrice, selectedSizes, selectedColors]);
+  }, [sortBy, selectedTypes, selectedVendors, availabilityFilter, onSaleOnly, priceRange, maxPrice, selectedOptions, searchQuery, internalSearch]);
 
   const activeFilterCount = activeChips.length;
 
   const filtered = useMemo(() => {
     let result = [...products];
+
+    const q = (searchQuery || internalSearch).toLowerCase();
+    if (q) {
+      result = result.filter((p) => 
+        p.node.title.toLowerCase().includes(q) || 
+        p.node.vendor.toLowerCase().includes(q) ||
+        p.node.productType.toLowerCase().includes(q) ||
+        p.node.tags.some(t => t.toLowerCase().includes(q))
+      );
+    }
+
+    if (selectedTypes.size > 0)
+      result = result.filter(p => selectedTypes.has(p.node.productType));
+
+    if (selectedVendors.size > 0)
+      result = result.filter(p => selectedVendors.has(p.node.vendor));
 
     if (availabilityFilter.inStock || availabilityFilter.outOfStock) {
       result = result.filter((p) => {
@@ -352,28 +530,26 @@ const Collections = () => {
       });
     }
 
+    if (onSaleOnly) {
+      result = result.filter(p => 
+        p.node.variants.edges.some(v => v.node.compareAtPrice && parseFloat(v.node.compareAtPrice.amount) > parseFloat(v.node.price.amount))
+      );
+    }
+
     result = result.filter((p) => {
       const price = parseFloat(p.node.priceRange.minVariantPrice.amount);
       return price >= priceRange[0] && price <= priceRange[1];
     });
 
-    if (selectedSizes.size > 0)
-      result = result.filter((p) =>
-        p.node.options.some(
-          (opt) =>
-            (opt.name.toLowerCase() === "size" || opt.name.toLowerCase() === "taille") &&
-            opt.values.some((v) => selectedSizes.has(v.toUpperCase()))
-        )
-      );
-
-    if (selectedColors.size > 0)
-      result = result.filter((p) =>
-        p.node.options.some(
-          (opt) =>
-            (opt.name.toLowerCase() === "color" || opt.name.toLowerCase() === "couleur") &&
-            opt.values.some((v) => selectedColors.has(v.toLowerCase()))
-        )
-      );
+    if (selectedOptions.size > 0) {
+      result = result.filter(p => {
+        return Array.from(selectedOptions.entries()).every(([optName, selectedValues]) => {
+          return p.node.options.some(opt => 
+            opt.name === optName && opt.values.some(v => selectedValues.has(v))
+          );
+        });
+      });
+    }
 
     switch (sortBy) {
       case "newest": result = [...result].reverse(); break;
@@ -384,7 +560,7 @@ const Collections = () => {
     }
 
     return result;
-  }, [products, sortBy, priceRange, selectedSizes, selectedColors, availabilityFilter]);
+  }, [products, sortBy, priceRange, selectedOptions, selectedTypes, selectedVendors, availabilityFilter, onSaleOnly, searchQuery, internalSearch]);
 
   useEffect(() => { setVisibleCount(PAGE_SIZE); }, [filtered.length, sortBy]);
 
@@ -395,31 +571,31 @@ const Collections = () => {
   const clearFilters = useCallback(() => {
     setSortBy("default");
     setPriceRange([0, maxPrice]);
-    setSelectedSizes(new Set());
-    setSelectedColors(new Set());
+    setSelectedTypes(new Set());
+    setSelectedVendors(new Set());
+    setSelectedOptions(new Map());
     setAvailabilityFilter({ inStock: false, outOfStock: false });
-    setSelectedCategory("All Products");
-  }, [maxPrice]);
+    setOnSaleOnly(false);
+    setInternalSearch("");
+    setSearchParams(new URLSearchParams());
+  }, [maxPrice, setSearchParams]);
 
   const handleLoadMore = () => {
     setLoadingMore(true);
     setTimeout(() => { setVisibleCount((c) => c + PAGE_SIZE); setLoadingMore(false); }, 400);
   };
 
-  const toggleSize = (s: string) =>
-    setSelectedSizes((prev) => { const n = new Set(prev); n.has(s) ? n.delete(s) : n.add(s); return n; });
-
-  const toggleColor = (c: string) =>
-    setSelectedColors((prev) => { const n = new Set(prev); n.has(c) ? n.delete(c) : n.add(c); return n; });
-
   /* shared filter panel props */
   const filterPanelProps = {
-    categories: CATEGORIES, selectedCategory, onSelectCategory: setSelectedCategory,
+    searchQuery: internalSearch,
+    onSearchChange: setInternalSearch,
+    availableTypes, selectedTypes, onToggleType: toggleType,
+    availableVendors, selectedVendors, onToggleVendor: toggleVendor,
     availabilityFilter, onAvailabilityChange: (k: "inStock" | "outOfStock", v: boolean) =>
       setAvailabilityFilter((p) => ({ ...p, [k]: v })),
     stockCounts, priceRange, onPriceRange: setPriceRange, maxPrice,
-    availableSizes, selectedSizes, onToggleSize: toggleSize,
-    availableColors, selectedColors, onToggleColor: toggleColor,
+    onSaleOnly, onToggleSale: setOnSaleOnly,
+    dynamicOptions, selectedOptions, onToggleOption: toggleOption,
     hasActiveFilters, onClear: clearFilters,
   };
 
@@ -449,7 +625,7 @@ const Collections = () => {
                     <SlidersHorizontal className="h-4 w-4" />
                     Filters
                     {activeFilterCount > 0 && (
-                      <span className="absolute -top-2 -right-4 h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                      <span className="absolute -top-2 -right-4 h-4 w-4 rounded-full bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black text-[10px] font-bold flex items-center justify-center">
                         {activeFilterCount}
                       </span>
                     )}
@@ -477,7 +653,7 @@ const Collections = () => {
               <span className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
                 {loading ? "Loading…" : `${filtered.length} product${filtered.length !== 1 ? "s" : ""}`}
                 {activeFilterCount > 0 && (
-                  <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                  <span className="px-2 py-0.5 rounded-full bg-[#BF953F]/10 text-[#BF953F] text-xs font-semibold">
                     {activeFilterCount} active
                   </span>
                 )}
@@ -560,7 +736,7 @@ const Collections = () => {
                 <span className="text-lg font-bold tracking-tight">Filters</span>
                 <div className="flex items-center gap-2">
                   {activeFilterCount > 0 && (
-                    <span className="h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                    <span className="h-5 w-5 rounded-full bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black text-[10px] font-bold flex items-center justify-center">
                       {activeFilterCount}
                     </span>
                   )}
@@ -626,7 +802,7 @@ const Collections = () => {
                       </p>
                       <div className="w-48 h-1 rounded-full bg-secondary overflow-hidden">
                         <div
-                          className="h-full bg-primary rounded-full transition-all duration-500"
+                          className="h-full bg-gradient-to-r from-[#BF953F] to-[#B38728] rounded-full transition-all duration-500"
                           style={{ width: `${(visibleCount / filtered.length) * 100}%` }}
                         />
                       </div>

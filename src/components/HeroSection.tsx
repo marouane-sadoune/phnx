@@ -18,17 +18,17 @@ export const HeroSection = () => {
       {/* Content */}
       <div className="relative z-10 px-6 md:px-[8%] w-full max-w-[1400px]">
         <div className="max-w-[650px]">
-          <h1 className="font-display text-6xl md:text-8xl font-extrabold tracking-tight text-foreground opacity-0 animate-fade-up drop-shadow-lg">
-            PHENEX
+          <h1 className="font-display text-6xl md:text-8xl font-extrabold tracking-tight text-white opacity-0 animate-fade-up drop-shadow-lg">
+            PHENIX
           </h1>
-          <p className="text-lg md:text-xl text-secondary-foreground mt-4 mb-8 font-light opacity-0 animate-fade-up-delay drop-shadow-md">
+          <p className="text-lg md:text-xl text-white/80 mt-4 mb-8 font-light opacity-0 animate-fade-up-delay drop-shadow-md">
             Streetwear meets modern minimalism.
           </p>
           <Link
             to="/collections"
-            className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-10 py-4 rounded-full font-bold uppercase tracking-widest text-sm hover:bg-foreground hover:text-background transition-all duration-400 shadow-lg opacity-0 animate-fade-up-delay-2"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black px-10 py-4 rounded-full font-bold uppercase tracking-widest text-sm hover:scale-105 hover:shadow-[0_0_20px_rgba(191,149,63,0.5)] transition-all duration-400 shadow-xl opacity-0 animate-fade-up-delay-2"
           >
-            Shop Collection
+            Shop Now
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
@@ -37,10 +37,10 @@ export const HeroSection = () => {
       {/* Bottom marquee */}
       <div className="absolute bottom-0 left-0 right-0 bg-black/50 backdrop-blur-sm py-3 overflow-hidden">
         <div className="flex animate-marquee whitespace-nowrap">
-          <span className="text-xs tracking-[0.3em] uppercase text-muted-foreground mx-8">
+          <span className="text-xs tracking-[0.3em] uppercase text-white/50 mx-8">
             PHENIX — 2026 COLLECTION | ELEVATE YOUR STYLE — PHENIX — 2024 COLLECTION | ELEVATE YOUR STYLE — PHENIX — 2026 COLLECTION | ELEVATE YOUR STYLE —
           </span>
-          <span className="text-xs tracking-[0.3em] uppercase text-muted-foreground mx-8">
+          <span className="text-xs tracking-[0.3em] uppercase text-white/50 mx-8">
             PHENIX — 2026 COLLECTION | ELEVATE YOUR STYLE — PHENIX — 2024 COLLECTION | ELEVATE YOUR STYLE — PHENIX — 2026 COLLECTION | ELEVATE YOUR STYLE —
           </span>
         </div>

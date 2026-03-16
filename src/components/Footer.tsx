@@ -16,13 +16,13 @@ export const Footer = () => {
   };
 
   return (
-    <footer className="bg-secondary border-t border-border">
+    <footer className="bg-[#0a0a0a] border-t border-border">
       <div className="px-6 md:px-10 py-14">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 max-w-[1400px] mx-auto">
           {/* Brand */}
           <div className="md:col-span-1">
-            <h3 className="font-display text-2xl font-bold text-foreground tracking-wider mb-3">PHENIX</h3>
-            <p className="text-muted-foreground text-sm leading-relaxed">
+            <h3 className="font-display text-2xl font-bold text-white tracking-wider mb-3">PHENIX</h3>
+            <p className="text-white/60 text-sm leading-relaxed">
               Streetwear meets modern minimalism. Elevate your style.
             </p>
             <div className="flex gap-3 mt-5">
@@ -47,11 +47,11 @@ export const Footer = () => {
 
           {/* Shop */}
           <div>
-            <h4 className="font-display text-sm font-semibold uppercase tracking-widest text-foreground mb-4">Shop</h4>
+            <h4 className="font-display text-sm font-semibold uppercase tracking-widest text-white mb-4">Shop</h4>
             <ul className="space-y-2">
               {["New Arrivals", "Best Sellers", "Collections", "Sale"].map((item) => (
                 <li key={item}>
-                  <a href="#products" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <a href="#products" className="text-sm text-white/60 hover:text-white transition-colors">
                     {item}
                   </a>
                 </li>
@@ -61,11 +61,11 @@ export const Footer = () => {
 
           {/* Help */}
           <div>
-            <h4 className="font-display text-sm font-semibold uppercase tracking-widest text-foreground mb-4">Help</h4>
+            <h4 className="font-display text-sm font-semibold uppercase tracking-widest text-white mb-4">Help</h4>
             <ul className="space-y-2">
               {["Shipping & Returns", "FAQ", "Contact Us", "Size Guide"].map((item) => (
                 <li key={item}>
-                  <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <a href="#" className="text-sm text-white/60 hover:text-white transition-colors">
                     {item}
                   </a>
                 </li>
@@ -75,8 +75,8 @@ export const Footer = () => {
 
           {/* Newsletter */}
           <div>
-            <h4 className="font-display text-sm font-semibold uppercase tracking-widest text-foreground mb-4">Newsletter</h4>
-            <p className="text-sm text-muted-foreground mb-4">Get 10% off your first order.</p>
+            <h4 className="font-display text-sm font-semibold uppercase tracking-widest text-white mb-4">Newsletter</h4>
+            <p className="text-sm text-white/60 mb-4">Get 10% off your first order.</p>
             <form onSubmit={handleSubscribe} className="flex gap-2">
               <input
                 type="email"
@@ -98,7 +98,7 @@ export const Footer = () => {
       </div>
 
       <div className="border-t border-border px-6 md:px-10 py-5">
-        <p className="text-center text-xs text-muted-foreground">
+        <p className="text-center text-xs text-white/40">
           © {new Date().getFullYear()} PHENIX. All rights reserved.
         </p>
       </div>

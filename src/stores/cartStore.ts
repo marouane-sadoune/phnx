@@ -15,6 +15,7 @@ export interface CartItem {
   variantId: string;
   variantTitle: string;
   price: { amount: string; currencyCode: string };
+  compareAtPrice: { amount: string; currencyCode: string } | null;
   quantity: number;
   selectedOptions: Array<{ name: string; value: string }>;
 }
@@ -31,6 +32,10 @@ interface CartStore {
   clearCart: () => void;
   syncCart: () => Promise<void>;
   getCheckoutUrl: () => string | null;
+  isDrawerOpen: boolean;
+  openDrawer: () => void;
+  closeDrawer: () => void;
+  setDrawerOpen: (open: boolean) => void;
 }
 
 export const useCartStore = create<CartStore>()(
@@ -41,9 +46,14 @@ export const useCartStore = create<CartStore>()(
       checkoutUrl: null,
       isLoading: false,
       isSyncing: false,
+      isDrawerOpen: false,
+
+      openDrawer: () => set({ isDrawerOpen: true }),
+      closeDrawer: () => set({ isDrawerOpen: false }),
+      setDrawerOpen: (open: boolean) => set({ isDrawerOpen: open }),
 
       addItem: async (item) => {
-        const { items, cartId, clearCart } = get();
+        const { items, cartId, clearCart, openDrawer } = get();
         const existingItem = items.find(i => i.variantId === item.variantId);
         set({ isLoading: true });
         try {
@@ -51,6 +61,7 @@ export const useCartStore = create<CartStore>()(
             const result = await createShopifyCart({ variantId: item.variantId, quantity: item.quantity });
             if (result) {
               set({ cartId: result.cartId, checkoutUrl: result.checkoutUrl, items: [{ ...item, lineId: result.lineId }] });
+              openDrawer();
             }
           } else if (existingItem) {
             const newQuantity = existingItem.quantity + item.quantity;
@@ -58,11 +69,13 @@ export const useCartStore = create<CartStore>()(
             const result = await updateShopifyCartLine(cartId, existingItem.lineId, newQuantity);
             if (result.success) {
               set({ items: get().items.map(i => i.variantId === item.variantId ? { ...i, quantity: newQuantity } : i) });
+              openDrawer();
             } else if (result.cartNotFound) clearCart();
           } else {
             const result = await addLineToShopifyCart(cartId, { variantId: item.variantId, quantity: item.quantity });
             if (result.success) {
               set({ items: [...get().items, { ...item, lineId: result.lineId ?? null }] });
+              openDrawer();
             } else if (result.cartNotFound) clearCart();
           }
         } catch (error) {
