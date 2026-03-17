@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { ShoppingCart, Minus, Plus, Trash2, ArrowRight, Loader2 } from "lucide-react";
+import { ShoppingCart, Minus, Plus, Trash2, ExternalLink, Loader2 } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
-import { useNavigate } from "react-router-dom";
 import * as pixel from "@/lib/pixel";
 
 export const CartDrawer = () => {
-  const navigate = useNavigate();
   const { 
     items, 
     isLoading, 
@@ -20,26 +19,24 @@ export const CartDrawer = () => {
     isDrawerOpen,
     setDrawerOpen
   } = useCartStore();
+  const navigate = useNavigate();
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce((sum, item) => sum + (parseFloat(item.price.amount) * item.quantity), 0);
 
   useEffect(() => { if (isDrawerOpen) syncCart(); }, [isDrawerOpen, syncCart]);
 
   const handleCheckout = () => {
-    const checkoutUrl = getCheckoutUrl();
-    if (checkoutUrl) {
-      // Track InitiateCheckout
-      pixel.event('InitiateCheckout', {
-        num_items: totalItems,
-        value: totalPrice,
-        currency: items[0]?.price.currencyCode || 'USD',
-        content_ids: items.map(i => i.variantId),
-        content_type: 'product'
-      });
-      
-      setDrawerOpen(false);
-      navigate("/checkout");
-    }
+    // Track InitiateCheckout
+    pixel.event('InitiateCheckout', {
+      num_items: totalItems,
+      value: totalPrice,
+      currency: items[0]?.price.currencyCode || 'USD',
+      content_ids: items.map(i => i.variantId),
+      content_type: 'product'
+    });
+    
+    setDrawerOpen(false);
+    navigate("/checkout");
   };
 
   return (
@@ -116,7 +113,7 @@ export const CartDrawer = () => {
                   <span className="text-xl font-bold text-primary">{items[0]?.price.currencyCode || '$'} {totalPrice.toFixed(2)}</span>
                 </div>
                 <Button onClick={handleCheckout} className="w-full bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black hover:scale-[1.02] hover:shadow-[0_0_15px_rgba(191,149,63,0.4)] transition-all duration-300 font-bold" size="lg" disabled={items.length === 0 || isLoading || isSyncing}>
-                  {isLoading || isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <><ArrowRight className="w-4 h-4 mr-2" />Checkout</>}
+                  {isLoading || isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <><ExternalLink className="w-4 h-4 mr-2" />Checkout</>}
                 </Button>
               </div>
             </>
