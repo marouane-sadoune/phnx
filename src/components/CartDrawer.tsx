@@ -8,13 +8,13 @@ import { useCartStore } from "@/stores/cartStore";
 import * as pixel from "@/lib/pixel";
 
 export const CartDrawer = () => {
-  const { 
-    items, 
-    isLoading, 
-    isSyncing, 
-    updateQuantity, 
-    removeItem, 
-    getCheckoutUrl, 
+  const {
+    items,
+    isLoading,
+    isSyncing,
+    updateQuantity,
+    removeItem,
+    getCheckoutUrl,
     syncCart,
     isDrawerOpen,
     setDrawerOpen
@@ -30,11 +30,11 @@ export const CartDrawer = () => {
     pixel.event('InitiateCheckout', {
       num_items: totalItems,
       value: totalPrice,
-      currency: items[0]?.price.currencyCode || 'USD',
+      currency: items[0]?.price.currencyCode || 'MAD',
       content_ids: items.map(i => i.variantId),
       content_type: 'product'
     });
-    
+
     setDrawerOpen(false);
     navigate("/checkout");
   };
