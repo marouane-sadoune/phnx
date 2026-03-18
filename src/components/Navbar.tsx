@@ -33,7 +33,31 @@ export const Navbar = () => {
           PHENIX
         </a>
 
-        <form onSubmit={handleSearch} className="hidden md:flex items-center bg-secondary rounded-full px-4 py-2 gap-2 min-w-[280px]">
+        {/* Desktop Navigation Links */}
+        <div className="hidden lg:flex items-center gap-8 px-8 flex-1 justify-center">
+          {[
+            { name: "Découvrir", path: "/collections" },
+            { name: "Pre-spring - NEW DROP", path: "/collections" },
+            { name: "SALES", path: "/collections?sale=true" },
+            { name: "SS 25", path: "/collections" },
+            { name: "Mentions légales", path: "/legal" }
+          ].map((link) => (
+            <button
+              key={link.name}
+              onClick={() => navigate(link.path)}
+              className={`
+                relative text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-300
+                ${link.name === "SALES" ? "text-red-500 hover:text-red-600" : "text-foreground/70 hover:text-foreground"}
+                group
+              `}
+            >
+              {link.name}
+              <span className="absolute -bottom-1.5 left-0 w-0 h-0.5 bg-[#BF953F] transition-all duration-300 group-hover:w-full" />
+            </button>
+          ))}
+        </div>
+
+        <form onSubmit={handleSearch} className="hidden xl:flex items-center bg-secondary rounded-full px-4 py-2 gap-2 min-w-[240px]">
           <Search className="h-4 w-4 text-muted-foreground" />
           <input
             type="text"
