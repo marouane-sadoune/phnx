@@ -27,14 +27,17 @@ export const Navbar = () => {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-      <div className="flex items-center justify-between px-6 md:px-36 h-16">
-        <a href="/" className="flex items-center gap-2 font-display text-xl sm:text-2xl md:text-3xl font-bold tracking-wider text-foreground hover:opacity-90 transition-opacity">
-          <img src={logoImg} alt="PHENIX logo" className="h-8 sm:h-10 md:h-12 w-auto object-contain shrink-0 dark:invert-0 invert" />
-          PHENIX
-        </a>
+      <div className="flex items-center justify-between px-8 md:px-12 h-20 max-w-[1920px] mx-auto w-full">
+        {/* LEFT COLUMN: Logo */}
+        <div className="flex-none min-w-[160px]">
+          <a href="/" className="flex items-center gap-3 font-display text-xl sm:text-2xl font-bold tracking-wider text-foreground hover:opacity-90 transition-opacity">
+            <img src={logoImg} alt="PHENIX logo" className="h-10 w-auto object-contain shrink-0 dark:invert-0 invert" />
+            <span className="hidden sm:inline">PHENIX</span>
+          </a>
+        </div>
 
-        {/* Desktop Navigation Links */}
-        <div className="hidden lg:flex items-center gap-8 px-8">
+        {/* CENTER COLUMN: Navigation Links */}
+        <div className="hidden lg:flex flex-1 items-center justify-center gap-10">
           {[
             { name: "Découvrir", path: "/collections" },
             { name: "Pre-spring - NEW DROP", path: "/collections" },
@@ -57,78 +60,81 @@ export const Navbar = () => {
           ))}
         </div>
 
-        {/* Search Bar - Positioned between Nav Links and Account */}
-        <form onSubmit={handleSearch} className="hidden xl:flex flex-1 max-w-[400px] items-center bg-secondary/30 backdrop-blur-sm rounded-full px-5 py-2.5 gap-3 border border-border/50 focus-within:border-[#BF953F]/40 focus-within:bg-secondary/40 focus-within:shadow-[0_0_20px_rgba(191,149,63,0.15)] transition-all duration-300 group mx-4">
-          <Search className="h-4 w-4 text-muted-foreground group-focus-within:text-[#BF953F] transition-colors" />
-          <input
-            type="text"
-            placeholder="Search products..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-transparent border-none outline-none text-[12px] font-bold uppercase tracking-[0.1em] text-foreground placeholder:text-muted-foreground/60 w-full"
-          />
-        </form>
+        {/* RIGHT COLUMN: Search and Actions */}
+        <div className="flex items-center justify-end gap-6 flex-none lg:flex-1 lg:max-w-[400px]">
+          {/* Search Bar */}
+          <form onSubmit={handleSearch} className="hidden xl:flex flex-1 items-center bg-secondary/30 backdrop-blur-sm rounded-full px-5 py-2.5 gap-3 border border-border/50 focus-within:border-[#BF953F]/40 focus-within:bg-secondary/40 focus-within:shadow-[0_0_20px_rgba(191,149,63,0.15)] transition-all duration-300 group">
+            <Search className="h-4 w-4 text-muted-foreground group-focus-within:text-[#BF953F] transition-colors" />
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-transparent border-none outline-none text-[12px] font-bold uppercase tracking-[0.1em] text-foreground placeholder:text-muted-foreground/60 w-full"
+            />
+          </form>
 
-        <div className="flex items-center gap-3 shrink-0">
-          {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center justify-center h-9 w-9 rounded-full bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black text-sm font-black hover:scale-105 transition-transform border-none shadow-[0_0_15px_rgba(191,149,63,0.3)] overflow-hidden">
-                  {user.user_metadata?.avatar_url ? (
-                    <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    (user.user_metadata?.display_name?.[0] ?? user.email?.[0] ?? "?").toUpperCase()
-                  )}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-card/95 backdrop-blur-xl border-border w-64 p-0 overflow-hidden shadow-2xl rounded-2xl animate-in fade-in zoom-in-95 duration-200">
-                <div className="p-4 bg-muted/40 border-b border-border/50">
-                  <DropdownMenuLabel className="p-0 text-[10px] uppercase font-black tracking-[0.25em] text-[#BF953F] mb-1.5 opacity-80">
-                    Account Access
-                  </DropdownMenuLabel>
-                  <p className="text-sm font-medium text-foreground truncate leading-none">
-                    {user.user_metadata?.display_name || user.email?.split('@')[0]}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground truncate mt-1.5 opacity-60">
-                    {user.email}
-                  </p>
-                </div>
-                
-                <div className="p-1.5">
-                  <DropdownMenuItem 
-                    onClick={() => navigate("/profile")} 
-                    className="flex items-center text-sm cursor-pointer rounded-xl h-11 px-3 focus:bg-primary focus:text-primary-foreground transition-all duration-200"
-                  >
-                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center mr-3 group-focus:bg-primary-foreground/20">
-                      <UserCircle2 className="h-4.5 w-4.5" />
-                    </div>
-                    <span className="font-bold tracking-wide">My Profile</span>
-                  </DropdownMenuItem>
+          <div className="flex items-center gap-3 shrink-0 ml-2">
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center justify-center h-9 w-9 rounded-full bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black text-sm font-black hover:scale-105 transition-transform border-none shadow-[0_0_15px_rgba(191,149,63,0.3)] overflow-hidden">
+                    {user.user_metadata?.avatar_url ? (
+                      <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      (user.user_metadata?.display_name?.[0] ?? user.email?.[0] ?? "?").toUpperCase()
+                    )}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-card/95 backdrop-blur-xl border-border w-64 p-0 overflow-hidden shadow-2xl rounded-2xl animate-in fade-in zoom-in-95 duration-200">
+                  <div className="p-4 bg-muted/40 border-b border-border/50">
+                    <DropdownMenuLabel className="p-0 text-[10px] uppercase font-black tracking-[0.25em] text-[#BF953F] mb-1.5 opacity-80">
+                      Account Access
+                    </DropdownMenuLabel>
+                    <p className="text-sm font-medium text-foreground truncate leading-none">
+                      {user.user_metadata?.display_name || user.email?.split('@')[0]}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground truncate mt-1.5 opacity-60">
+                      {user.email}
+                    </p>
+                  </div>
+                  
+                  <div className="p-1.5">
+                    <DropdownMenuItem 
+                      onClick={() => navigate("/profile")} 
+                      className="flex items-center text-sm cursor-pointer rounded-xl h-11 px-3 focus:bg-primary focus:text-primary-foreground transition-all duration-200"
+                    >
+                      <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center mr-3 group-focus:bg-primary-foreground/20">
+                        <UserCircle2 className="h-4.5 w-4.5" />
+                      </div>
+                      <span className="font-bold tracking-wide">My Profile</span>
+                    </DropdownMenuItem>
 
-                  <DropdownMenuSeparator className="bg-border/40 mx-2 my-1.5" />
+                    <DropdownMenuSeparator className="bg-border/40 mx-2 my-1.5" />
 
-                  <DropdownMenuItem 
-                    onClick={handleSignOut} 
-                    className="flex items-center text-sm cursor-pointer rounded-xl h-11 px-3 focus:bg-destructive/10 focus:text-destructive hover:bg-destructive/10 transition-all duration-200"
-                  >
-                    <div className="h-8 w-8 rounded-lg bg-destructive/10 flex items-center justify-center mr-3">
-                      <LogOut className="h-4 w-4" />
-                    </div>
-                    <span className="font-bold tracking-wide">Sign Out</span>
-                  </DropdownMenuItem>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <button
-              onClick={() => navigate("/auth")}
-              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <User className="h-5 w-5" />
-            </button>
-          )}
-          <ModeToggle />
-          <CartDrawer />
+                    <DropdownMenuItem 
+                      onClick={handleSignOut} 
+                      className="flex items-center text-sm cursor-pointer rounded-xl h-11 px-3 focus:bg-destructive/10 focus:text-destructive hover:bg-destructive/10 transition-all duration-200"
+                    >
+                      <div className="h-8 w-8 rounded-lg bg-destructive/10 flex items-center justify-center mr-3">
+                        <LogOut className="h-4 w-4" />
+                      </div>
+                      <span className="font-bold tracking-wide">Sign Out</span>
+                    </DropdownMenuItem>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <button
+                onClick={() => navigate("/auth")}
+                className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <User className="h-5 w-5" />
+              </button>
+            )}
+            <ModeToggle />
+            <CartDrawer />
+          </div>
         </div>
       </div>
     </nav>
