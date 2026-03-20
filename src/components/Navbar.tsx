@@ -34,7 +34,7 @@ export const Navbar = () => {
         </a>
 
         {/* Desktop Navigation Links */}
-        <div className="hidden lg:flex items-center gap-8 px-8 flex-1 justify-center">
+        <div className="hidden lg:flex items-center gap-8 px-8">
           {[
             { name: "Découvrir", path: "/collections" },
             { name: "Pre-spring - NEW DROP", path: "/collections" },
@@ -48,7 +48,7 @@ export const Navbar = () => {
               className={`
                 relative text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-300
                 ${link.name === "SALES" ? "text-red-500 hover:text-red-600" : "text-foreground/70 hover:text-foreground"}
-                group
+                group whitespace-nowrap
               `}
             >
               {link.name}
@@ -57,23 +57,28 @@ export const Navbar = () => {
           ))}
         </div>
 
-        <form onSubmit={handleSearch} className="hidden xl:flex items-center bg-secondary rounded-full px-4 py-2 gap-2 min-w-[240px]">
-          <Search className="h-4 w-4 text-muted-foreground" />
+        {/* Search Bar - Positioned between Nav Links and Account */}
+        <form onSubmit={handleSearch} className="hidden xl:flex flex-1 max-w-[400px] items-center bg-secondary/30 backdrop-blur-sm rounded-full px-5 py-2.5 gap-3 border border-border/50 focus-within:border-[#BF953F]/40 focus-within:bg-secondary/40 focus-within:shadow-[0_0_20px_rgba(191,149,63,0.15)] transition-all duration-300 group mx-4">
+          <Search className="h-4 w-4 text-muted-foreground group-focus-within:text-[#BF953F] transition-colors" />
           <input
             type="text"
-            placeholder="Search for products..."
+            placeholder="Search products..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground w-full"
+            className="bg-transparent border-none outline-none text-[12px] font-bold uppercase tracking-[0.1em] text-foreground placeholder:text-muted-foreground/60 w-full"
           />
         </form>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center justify-center h-9 w-9 rounded-full bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black text-sm font-black hover:scale-105 transition-transform border-none shadow-[0_0_15px_rgba(191,149,63,0.3)]">
-                  {(user.user_metadata?.display_name?.[0] ?? user.email?.[0] ?? "?").toUpperCase()}
+                <button className="flex items-center justify-center h-9 w-9 rounded-full bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black text-sm font-black hover:scale-105 transition-transform border-none shadow-[0_0_15px_rgba(191,149,63,0.3)] overflow-hidden">
+                  {user.user_metadata?.avatar_url ? (
+                    <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    (user.user_metadata?.display_name?.[0] ?? user.email?.[0] ?? "?").toUpperCase()
+                  )}
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-card/95 backdrop-blur-xl border-border w-64 p-0 overflow-hidden shadow-2xl rounded-2xl animate-in fade-in zoom-in-95 duration-200">

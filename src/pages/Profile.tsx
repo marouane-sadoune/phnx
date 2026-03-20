@@ -16,14 +16,22 @@ import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { ProductCard } from "@/components/ProductCard";
 
 /* ── Avatar with initials fallback ─────────────────────────── */
-function Avatar({ name, email, size = 20 }: { name?: string; email?: string; size?: number }) {
+function Avatar({ name, email, src, size = 20 }: { name?: string; email?: string; src?: string; size?: number }) {
     const initials = name
         ? name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)
         : email?.[0]?.toUpperCase() ?? "?";
 
+    if (src) {
+        return (
+            <div className="shrink-0 overflow-hidden rounded-full border border-border shadow-sm" style={{ width: size, height: size }}>
+                <img src={src} alt={name || "Avatar"} className="w-full h-full object-cover" />
+            </div>
+        );
+    }
+
     return (
         <div
-            className="rounded-full bg-primary text-primary-foreground font-bold flex items-center justify-center shrink-0"
+            className="rounded-full bg-primary text-primary-foreground font-bold flex items-center justify-center shrink-0 shadow-sm transition-transform"
             style={{ width: size, height: size, fontSize: size * 0.38 }}
         >
             {initials}
@@ -97,6 +105,48 @@ const Profile = () => {
         }
     };
 
+    /* Avatar state */
+    const avatarUrl = user.user_metadata?.avatar_url ?? "";
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        try {
+            setUploadingAvatar(true);
+            const file = e.target.files?.[0];
+            if (!file) return;
+
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            // 1. Upload to Supabase Storage
+            const { error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            // 2. Get Public URL
+            const { data: { publicUrl } } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(filePath);
+
+            // 3. Update User Metadata
+            const { error: updateError } = await supabase.auth.updateUser({
+                data: { avatar_url: publicUrl }
+            });
+
+            if (updateError) throw updateError;
+
+            toast.success("Profile image updated!");
+        } catch (error: any) {
+            toast.error(error.message || "Failed to upload image");
+            console.error(error);
+        } finally {
+            setUploadingAvatar(false);
+        }
+    };
+
     const handleSignOut = async () => {
         await signOut();
         toast.success("Signed out");
@@ -124,11 +174,26 @@ const Profile = () => {
                         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
 
                         {/* Avatar */}
-                        <div className="relative">
-                            <Avatar name={name || displayName} email={email} size={88} />
-                            <button className="absolute bottom-0 right-0 rounded-full bg-background border border-border p-1.5 hover:bg-secondary transition-colors shadow-sm">
-                                <Camera className="h-3 w-3 text-muted-foreground" />
-                            </button>
+                        <div className="relative group">
+                            <Avatar name={name || displayName} email={email} src={avatarUrl} size={88} />
+                            <label className={`
+                                absolute bottom-0 right-0 rounded-full bg-background border border-border p-1.5 
+                                cursor-pointer hover:bg-secondary transition-all shadow-md active:scale-95
+                                ${uploadingAvatar ? "animate-pulse opacity-50 cursor-wait" : ""}
+                            `}>
+                                <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    className="hidden" 
+                                    onChange={handleAvatarUpload}
+                                    disabled={uploadingAvatar}
+                                />
+                                {uploadingAvatar ? (
+                                    <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                                ) : (
+                                    <Camera className="h-3 w-3 text-muted-foreground" />
+                                )}
+                            </label>
                         </div>
 
                         {/* Info */}
