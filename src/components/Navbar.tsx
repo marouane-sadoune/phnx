@@ -28,10 +28,10 @@ export const Navbar = () => {
   };
 
   const navLinks = [
+    { name: "Home", path: "/" },
     { name: "Découvrir", path: "/collections" },
     { name: "Pre-spring - NEW DROP", path: "/collections" },
     { name: "SALES", path: "/collections?sale=true" },
-    { name: "SS 25", path: "/collections" },
     { name: "Mentions légales", path: "/legal" }
   ];
 
@@ -54,7 +54,7 @@ export const Navbar = () => {
                   Phenix
                 </SheetTitle>
               </SheetHeader>
-              
+
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 <div className="space-y-4">
                   <p className="text-[10px] uppercase font-black tracking-[0.25em] text-[#BF953F] opacity-80">
@@ -114,7 +114,7 @@ export const Navbar = () => {
                         <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
                       </div>
                     </div>
-                    <button 
+                    <button
                       onClick={() => {
                         navigate("/profile");
                         setIsMobileMenuOpen(false);
@@ -123,7 +123,7 @@ export const Navbar = () => {
                     >
                       VIEW PROFILE
                     </button>
-                    <button 
+                    <button
                       onClick={() => {
                         handleSignOut();
                         setIsMobileMenuOpen(false);
@@ -134,7 +134,7 @@ export const Navbar = () => {
                     </button>
                   </div>
                 ) : (
-                  <button 
+                  <button
                     onClick={() => {
                       navigate("/auth");
                       setIsMobileMenuOpen(false);
@@ -212,10 +212,10 @@ export const Navbar = () => {
                         {user.email}
                       </p>
                     </div>
-                    
+
                     <div className="p-1.5">
-                      <DropdownMenuItem 
-                        onClick={() => navigate("/profile")} 
+                      <DropdownMenuItem
+                        onClick={() => navigate("/profile")}
                         className="flex items-center text-sm cursor-pointer rounded-xl h-11 px-3 focus:bg-primary focus:text-primary-foreground transition-all duration-200"
                       >
                         <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center mr-3 group-focus:bg-primary-foreground/20">
@@ -226,8 +226,8 @@ export const Navbar = () => {
 
                       <DropdownMenuSeparator className="bg-border/40 mx-2 my-1.5" />
 
-                      <DropdownMenuItem 
-                        onClick={handleSignOut} 
+                      <DropdownMenuItem
+                        onClick={handleSignOut}
                         className="flex items-center text-sm cursor-pointer rounded-xl h-11 px-3 focus:bg-destructive/10 focus:text-destructive hover:bg-destructive/10 transition-all duration-200"
                       >
                         <div className="h-8 w-8 rounded-lg bg-destructive/10 flex items-center justify-center mr-3">
