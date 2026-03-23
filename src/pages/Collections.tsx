@@ -379,7 +379,7 @@ function FilterPanel({
 const Collections = () => {
   const [products, setProducts] = useState<ShopifyProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<SortOption>("default");
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
   const [selectedVendors, setSelectedVendors] = useState<Set<string>>(new Set());
