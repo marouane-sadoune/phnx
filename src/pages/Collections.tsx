@@ -552,7 +552,10 @@ const Collections = () => {
     }
 
     switch (sortBy) {
-      case "newest": result = [...result].reverse(); break;
+      case "newest":
+        // Since the API now returns newest first by default, we don't need to reverse.
+        // If the user selects "Newest", we just keep the API order.
+        break;
       case "price-asc": result.sort((a, b) => parseFloat(a.node.priceRange.minVariantPrice.amount) - parseFloat(b.node.priceRange.minVariantPrice.amount)); break;
       case "price-desc": result.sort((a, b) => parseFloat(b.node.priceRange.minVariantPrice.amount) - parseFloat(a.node.priceRange.minVariantPrice.amount)); break;
       case "name-asc": result.sort((a, b) => a.node.title.localeCompare(b.node.title)); break;
