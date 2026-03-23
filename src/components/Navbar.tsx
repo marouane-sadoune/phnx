@@ -46,37 +46,23 @@ export const Navbar = () => {
           </a>
         </div>
 
-        {/* CENTER COLUMN: Navigation Links (Desktop) */}
-        <div className="hidden lg:flex flex-1 items-center justify-center gap-10">
-          {navLinks.map((link) => (
-            <button
-              key={link.name}
-              onClick={() => navigate(link.path)}
-              className={`
-                relative text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-300
-                ${link.name === "SALES" ? "text-red-500 hover:text-red-600" : "text-foreground/70 hover:text-foreground"}
-                group whitespace-nowrap
-              `}
-            >
-              {link.name}
-              <span className="absolute -bottom-1.5 left-0 w-0 h-0.5 bg-[#BF953F] transition-all duration-300 group-hover:w-full" />
-            </button>
-          ))}
-        </div>
-
-        {/* RIGHT COLUMN: Search and Actions */}
-        <div className="flex items-center justify-end gap-2 sm:gap-6 flex-none lg:flex-1 lg:max-w-[400px]">
-          {/* Search Bar (Desktop) */}
-          <form onSubmit={handleSearch} className="hidden xl:flex flex-1 items-center bg-secondary/30 backdrop-blur-sm rounded-full px-5 py-2.5 gap-3 border border-border/50 focus-within:border-[#BF953F]/40 focus-within:bg-secondary/40 focus-within:shadow-[0_0_20px_rgba(191,149,63,0.15)] transition-all duration-300 group">
+        {/* CENTER COLUMN: Search Bar (Desktop) */}
+        <div className="hidden lg:flex flex-1 items-center justify-center max-w-[600px] mx-auto">
+          <form onSubmit={handleSearch} className="flex-1 flex items-center bg-secondary/30 backdrop-blur-sm rounded-full px-5 py-2.5 gap-3 border border-border/50 focus-within:border-[#BF953F]/40 focus-within:bg-secondary/40 focus-within:shadow-[0_0_20px_rgba(191,149,63,0.15)] transition-all duration-300 group">
             <Search className="h-4 w-4 text-muted-foreground group-focus-within:text-[#BF953F] transition-colors" />
             <input
               type="text"
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent border-none outline-none text-[12px] font-bold uppercase tracking-[0.1em] text-foreground placeholder:text-muted-foreground/60 w-full"
+              className="bg-transparent border-none outline-none text-[12px] font-bold uppercase tracking-[0.1em] text-foreground placeholder:text-muted-foreground/60 w-full text-center"
             />
           </form>
+        </div>
+
+        {/* RIGHT COLUMN: Actions */}
+        <div className="flex items-center justify-end gap-2 sm:gap-6 flex-none lg:flex-1 lg:max-w-[400px]">
+
 
           <div className="flex items-center gap-1 sm:gap-3 shrink-0 ml-2">
             {/* User Icon (Desktop) */}
