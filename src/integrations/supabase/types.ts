@@ -41,6 +41,36 @@ export type Database = {
         }
         Relationships: []
       }
+      checkout_abandonment: {
+        Row: {
+          id: string
+          user_id: string
+          abandonment_count: number
+          is_blocked: boolean
+          warning_shown: boolean
+          last_abandoned_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          abandonment_count?: number
+          is_blocked?: boolean
+          warning_shown?: boolean
+          last_abandoned_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          abandonment_count?: number
+          is_blocked?: boolean
+          warning_shown?: boolean
+          last_abandoned_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

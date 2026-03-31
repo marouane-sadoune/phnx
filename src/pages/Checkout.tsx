@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCartStore } from "@/stores/cartStore";
 import { Navbar } from "@/components/Navbar";
@@ -6,6 +6,8 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCheckoutGuard } from "@/hooks/useCheckoutGuard";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   CreditCard, 
   Truck, 
@@ -13,16 +15,27 @@ import {
   ShieldCheck, 
   Lock, 
   Info,
-  MapPin,
   CheckCircle2,
-  Package
+  Package,
+  AlertTriangle,
+  Ban
 } from "lucide-react";
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { items, getCheckoutUrl } = useCartStore();
   const [step, setStep] = useState(1); // 1: Info, 2: Shipping, 3: Payment
   
+  const {
+    isBlocked,
+    abandonmentCount,
+    loading: guardLoading,
+    markInteracted,
+    markCompleted,
+    handleLeaveWithoutCompletion,
+  } = useCheckoutGuard();
+
   const totalPrice = items.reduce((sum, item) => sum + (parseFloat(item.price.amount) * item.quantity), 0);
   const currency = items[0]?.price.currencyCode || "USD";
 
@@ -40,7 +53,21 @@ const Checkout = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    markInteracted(); // mark that the user has started filling the form
   };
+
+  // When user clicks Back or navigates away, record abandonment
+  const handleBack = async () => {
+    await handleLeaveWithoutCompletion();
+    navigate(-1);
+  };
+
+  // Clean up on unmount (e.g. user navigates via Navbar)
+  useEffect(() => {
+    return () => {
+      handleLeaveWithoutCompletion();
+    };
+  }, []);
 
   if (items.length === 0) {
     return (
@@ -59,16 +86,67 @@ const Checkout = () => {
     );
   }
 
+  // ── BLOCKED SCREEN ───────────────────────────────────────────────────────
+  if (!guardLoading && isBlocked && user) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-lg mx-auto">
+          <div className="w-24 h-24 rounded-full bg-red-500/10 flex items-center justify-center mb-6 border border-red-500/30">
+            <Ban className="h-12 w-12 text-red-500" />
+          </div>
+          <h1 className="font-display text-3xl font-bold uppercase mb-3 text-red-500">
+            Access Blocked
+          </h1>
+          <p className="text-muted-foreground mb-4 leading-relaxed">
+            Your account has been <span className="text-foreground font-semibold">temporarily blocked</span> from checkout due to multiple abandoned orders.
+          </p>
+          <p className="text-sm text-muted-foreground mb-8">
+            Please contact our support team to resolve this issue.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              onClick={() => navigate("/collections")}
+              variant="outline"
+              className="rounded-full px-8 border-border"
+            >
+              Continue Browsing
+            </Button>
+            <Button
+              onClick={() => window.location.href = "mailto:support@phenix.com"}
+              className="rounded-full px-8 bg-[#BF953F] text-black hover:bg-[#BF953F]/90"
+            >
+              Contact Support
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
+
+      {/* ── WARNING BANNER (1st abandonment) ────────────────────────── */}
+      {!guardLoading && abandonmentCount === 1 && user && !isBlocked && (
+        <div className="fixed top-16 left-0 right-0 z-40 bg-amber-500/10 border-b border-amber-500/30 backdrop-blur-sm">
+          <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center gap-3">
+            <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
+            <p className="text-sm text-amber-600 dark:text-amber-400">
+              <span className="font-bold">Warning:</span> You previously abandoned a checkout. If you abandon again, your account will be blocked from purchasing.
+            </p>
+          </div>
+        </div>
+      )}
       
       {/* ── Checkout Header ────────────────────────────────────────── */}
-      <div className="pt-24 pb-8 px-6 md:px-10 max-w-[1400px] mx-auto w-full">
+      <div className={`pt-24 pb-8 px-6 md:px-10 max-w-[1400px] mx-auto w-full ${abandonmentCount === 1 && user && !isBlocked ? "mt-12" : ""}`}>
         <div className="flex items-center justify-between mb-8">
           <Button 
             variant="ghost" 
-            onClick={() => navigate(-1)} 
+            onClick={handleBack}
             className="group flex items-center gap-2 text-muted-foreground hover:text-foreground p-0"
           >
             <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
@@ -284,6 +362,7 @@ const Checkout = () => {
                   </Button>
                   <Button 
                     onClick={() => {
+                      markCompleted(); // ✅ prevent abandonment from being recorded
                       const url = getCheckoutUrl();
                       if (url) window.location.href = url;
                     }}
