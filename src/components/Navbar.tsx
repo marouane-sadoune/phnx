@@ -241,7 +241,7 @@ export const Navbar = () => {
               ) : (
                 <button
                   onClick={() => navigate("/auth")}
-                  className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="p-2 text-[#BF953F] hover:opacity-80 transition-opacity"
                 >
                   <User className="h-5 w-5" />
                 </button>
