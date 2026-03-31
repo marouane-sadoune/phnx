@@ -23,8 +23,15 @@ import {
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { items, getCheckoutUrl } = useCartStore();
+  
+  // Redirect unauthenticated users to the login page
+  useEffect(() => {
+    if (!isAuthLoading && !user) {
+      navigate("/auth");
+    }
+  }, [user, isAuthLoading, navigate]);
   const [step, setStep] = useState(1); // 1: Info, 2: Shipping, 3: Payment
   
   const {
