@@ -5,9 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ShoppingCart, Minus, Plus, Trash2, ExternalLink, Loader2 } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
+import { useAuth } from "@/contexts/AuthContext";
 import * as pixel from "@/lib/pixel";
 
 export const CartDrawer = () => {
+  const { user } = useAuth();
   const {
     items,
     isLoading,
@@ -36,7 +38,11 @@ export const CartDrawer = () => {
     });
 
     setDrawerOpen(false);
-    navigate("/checkout");
+    if (!user) {
+      navigate("/auth");
+    } else {
+      navigate("/checkout");
+    }
   };
 
   return (
